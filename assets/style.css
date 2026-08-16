@@ -1002,6 +1002,12 @@ table { border-collapse: collapse; width: 100%; }
 
 /* ─── Responsive ────────────────────────────────────────── */
 
+/* 전체 가로 스크롤 방지 */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 @media (max-width: 900px) {
   .chapter-hero-inner { grid-template-columns: 1fr; }
   .chapter-info-card { display: none; }
@@ -1012,14 +1018,8 @@ table { border-collapse: collapse; width: 100%; }
 @media (max-width: 640px) {
   :root { --gutter: 16px; }
 
-  /* 컨테이너 — 텍스트 잘림 방지 */
-  .container {
-    padding: 0 16px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  * { box-sizing: border-box; }
-  body { width: 100%; overflow-x: hidden; }
+  /* 컨테이너 */
+  .container { padding: 0 16px; }
 
   /* Hero */
   .hero { padding: 40px 0 36px; }
