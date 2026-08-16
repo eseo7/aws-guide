@@ -121,6 +121,8 @@ table { border-collapse: collapse; width: 100%; }
 
 /* ─── Layout ────────────────────────────────────────────── */
 .container {
+  box-sizing: border-box;
+  width: 100%;
   max-width: var(--max-w);
   margin: 0 auto;
   padding: 0 var(--gutter);
