@@ -1,39 +1,831 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CH02 — Amazon EC2 · AWS 완전 정복 가이드</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CH02 · Amazon EC2 — AWS 완전 정복 가이드</title>
+  <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body>
-<nav class="topnav">
-  <div class="topnav-in">
-    <a href="/" class="topnav-home">aws-guide</a>
-    <span class="topnav-sep">/</span>
-    <span class="topnav-current">CH02 · Amazon EC2</span>
-    <div class="topnav-progress"><div class="topnav-fill" id="progress-fill"></div></div>
+
+<!-- ── Top Nav ── -->
+<nav class="chapter-topnav">
+  <div class="container">
+    <div class="chapter-topnav-inner">
+      <a href="/" class="back-link">
+        <span class="back-arrow">←</span>
+        <span>목차로</span>
+      </a>
+      <span class="chapter-nav-label">CH02 · Amazon EC2</span>
+      <div class="chapter-nav-actions">
+        <button class="complete-btn" id="completeBtn" data-chapter-id="ch02">
+          <span class="complete-icon">○</span>
+          <span class="complete-text">완료로 표시</span>
+        </button>
+      </div>
+    </div>
   </div>
 </nav>
-<div class="wrap">
-<header class="ch-hero">
-  <p class="ch-eyebrow">Chapter 02</p>
-  <div class="ch-num">02</div>
-  <h1>Amazon EC2</h1>
-</header>
-<div class="section">
-  <p class="section-label">준비 중</p>
-  <div class="callout info">
-    <span class="callout-label">작업 중인 챕터입니다</span>
-    <p>이 챕터는 현재 작성 중입니다. 곧 업데이트됩니다.</p>
+
+<!-- ── Chapter Hero ── -->
+<section class="chapter-hero">
+  <div class="container">
+    <div class="chapter-hero-inner">
+      <div class="chapter-hero-left">
+        <div class="chapter-hero-number">
+          <span class="chapter-num-badge" style="background: var(--cat-core-h)">02</span>
+          CHAPTER 02 · 핵심 서비스
+        </div>
+        <h1 class="chapter-hero-title">Amazon EC2</h1>
+        <p class="chapter-hero-subtitle">가상 서버를 처음부터 끝까지 — 생성·접속·배포·정리</p>
+        <div class="chapter-hero-tags">
+          <span class="tag tag-cat-core">핵심 서비스</span>
+          <span class="tag tag-billing">시간당 과금</span>
+          <span class="tag tag-neutral">Spring Boot 기준</span>
+        </div>
+        <p class="chapter-hero-services">EC2 · EBS · AMI · 보안 그룹 · 탄력적 IP · ENI · 키 페어 · 유저 데이터 · 메타데이터</p>
+      </div>
+      <div class="chapter-info-card">
+        <div class="info-card-title">CHAPTER INFO</div>
+        <div class="info-card-item">
+          <span class="info-icon">🖥</span>
+          <span>개념 9개 + 실습 8개</span>
+        </div>
+        <div class="info-card-item">
+          <span class="info-icon">💰</span>
+          <span>시간당 과금 — 즉시 정리 필수</span>
+        </div>
+        <div class="info-card-item">
+          <span class="info-icon">⚠️</span>
+          <span>중지(Stop) ≠ 종료(Terminate)</span>
+        </div>
+        <div class="info-card-item">
+          <span class="info-icon">🔗</span>
+          <span>이전: CH01 AWS 기초 개념</span>
+        </div>
+        <div class="info-card-item">
+          <span class="info-icon">🔗</span>
+          <span>다음: CH03 Amazon VPC</span>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
-<nav class="ch-nav" id="ch-nav"></nav>
-<footer><p>aws-guide · CH02 · Amazon EC2</p></footer>
-</div>
-<script src="/assets/nav.js"></script>
+</section>
+
+<!-- ── Layout ── -->
+<div class="container">
+  <div class="chapter-layout">
+
+    <!-- ── Main Content ── -->
+    <main class="chapter-content">
+
+      <!-- ① EC2란 -->
+      <section class="content-section" id="what">
+        <div class="section-label">01</div>
+        <h2>Amazon EC2란</h2>
+        <p>EC2(Elastic Compute Cloud)는 AWS에서 가상 서버를 빌려주는 서비스입니다. 클릭 몇 번이면 수십 초 안에 리눅스나 윈도우 서버가 생기고, 필요 없으면 즉시 삭제할 수 있습니다.</p>
+        <p><strong>Elastic</strong>이 이름에 붙은 이유는 필요에 따라 크기를 늘리고 줄일 수 있어서입니다. 트래픽이 몰리면 사양을 올리고, 새벽에 한산하면 다시 낮춥니다.</p>
+
+        <div class="callout callout-tip">
+          <span class="callout-icon">🏨</span>
+          <div class="callout-body">
+            <strong>현업에서 EC2를 쓰는 이유</strong><br>
+            Parnas Rewards, TMS API처럼 Spring Boot 기반 백엔드 서비스를 올리는 가장 기본적인 방법이 EC2입니다. OS 위에 JDK를 설치하고, jar 파일을 올리고, 서비스로 등록합니다. VMC(VMware Cloud)에서 EC2로 마이그레이션하는 것도 결국 가상 서버를 다른 플랫폼으로 옮기는 작업입니다.
+          </div>
+        </div>
+
+        <h3>EC2 인스턴스 유형 읽는 법</h3>
+        <p>인스턴스 유형은 <code>t3.micro</code> 같은 형식입니다. 각 부분의 의미는 다음과 같습니다.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-header">📖 인스턴스 유형 이름 구조</div>
+          <div class="diagram-body">
+            <div style="display:flex;align-items:center;gap:0;font-size:32px;font-weight:800;margin-bottom:20px;justify-content:center">
+              <span style="color:var(--cat-basics-h);background:var(--cat-basics-bg);padding:8px 16px;border-radius:8px 0 0 8px">t</span>
+              <span style="color:var(--cat-core-h);background:var(--cat-core-bg);padding:8px 16px">3</span>
+              <span style="color:var(--text-3);padding:8px 4px">.</span>
+              <span style="color:var(--cat-ops-h);background:var(--cat-ops-bg);padding:8px 16px;border-radius:0 8px 8px 0">micro</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+              <div style="background:var(--cat-basics-bg);border-radius:8px;padding:12px;text-align:center">
+                <div style="font-size:11px;font-weight:700;color:var(--cat-basics-text);margin-bottom:4px">패밀리 (t)</div>
+                <div style="font-size:12px;color:var(--text-2)">서버의 성격<br>t=범용 버스트<br>m=범용 균형<br>c=컴퓨팅 최적화<br>r=메모리 최적화</div>
+              </div>
+              <div style="background:var(--cat-core-bg);border-radius:8px;padding:12px;text-align:center">
+                <div style="font-size:11px;font-weight:700;color:var(--cat-core-text);margin-bottom:4px">세대 (3)</div>
+                <div style="font-size:12px;color:var(--text-2)">숫자가 높을수록<br>최신 세대<br>같은 가격이면<br>세대 높은 게 좋음</div>
+              </div>
+              <div style="background:var(--cat-ops-bg);border-radius:8px;padding:12px;text-align:center">
+                <div style="font-size:11px;font-weight:700;color:var(--cat-ops-text);margin-bottom:4px">크기 (micro)</div>
+                <div style="font-size:12px;color:var(--text-2)">nano/micro/small<br>/medium/large<br>/xlarge/2xlarge...<br>클수록 vCPU·메모리↑</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead>
+              <tr><th>유형</th><th>vCPU</th><th>메모리</th><th>시간당 요금(서울)</th><th>용도</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>t3.nano</code></td><td>2</td><td>0.5 GB</td><td>약 $0.006</td><td>초경량 테스트</td></tr>
+              <tr><td><code>t3.micro</code></td><td>2</td><td>1 GB</td><td>약 $0.013</td><td>학습용 · 프리 티어</td></tr>
+              <tr><td><code>t3.small</code></td><td>2</td><td>2 GB</td><td>약 $0.026</td><td>소규모 웹서버</td></tr>
+              <tr><td><code>t3.medium</code></td><td>2</td><td>4 GB</td><td>약 $0.052</td><td>Spring Boot 권장</td></tr>
+              <tr><td><code>m6i.large</code></td><td>2</td><td>8 GB</td><td>약 $0.112</td><td>프로덕션 균형</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout-warn">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            <strong>t3.micro로 Spring Boot 돌리면?</strong><br>
+            메모리 1GB는 Spring Boot 기본 실행에도 빡빡합니다. 학습용으로는 괜찮지만, 실제 서비스에는 최소 t3.medium(4GB)을 권장합니다. HikariCP 커넥션 풀 exhaustion 문제도 메모리 부족과 연관될 수 있습니다.
+          </div>
+        </div>
+      </section>
+
+      <!-- ② T타입 버스트 -->
+      <section class="content-section" id="tburst">
+        <div class="section-label">02</div>
+        <h2>T타입 버스트 — 크레딧 기반 CPU</h2>
+        <p>t3.micro 같은 T타입 인스턴스는 일반 인스턴스와 다릅니다. 평소에는 낮은 CPU 성능으로 동작하다가, 순간적으로 높은 성능이 필요할 때 <strong>CPU 크레딧을 소모해서 버스트</strong>합니다.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-header">📊 T타입 CPU 크레딧 동작 방식</div>
+          <div class="diagram-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <div style="background:var(--safe-soft,#EBFBEE);border-radius:8px;padding:16px">
+                <div style="font-size:12px;font-weight:700;color:#087F3E;margin-bottom:8px">✅ 크레딧 적립</div>
+                <p style="font-size:13px;color:var(--text-2);margin:0">CPU 사용률이 기준(t3.micro는 10%)보다 낮을 때 시간당 크레딧이 쌓입니다. 인스턴스가 켜져 있는 동안 계속 적립.</p>
+              </div>
+              <div style="background:#FFF9DB;border-radius:8px;padding:16px">
+                <div style="font-size:12px;font-weight:700;color:#916B00;margin-bottom:8px">⚡ 크레딧 소모 (버스트)</div>
+                <p style="font-size:13px;color:var(--text-2);margin:0">CPU 사용률이 기준을 초과할 때 크레딧을 소모해서 최대 100%까지 성능을 높입니다.</p>
+              </div>
+            </div>
+            <div style="background:#FFF5F5;border-radius:8px;padding:12px;margin-top:12px">
+              <div style="font-size:12px;font-weight:700;color:#C92A2A;margin-bottom:4px">🚨 크레딧 고갈 시</div>
+              <p style="font-size:13px;color:var(--text-2);margin:0">기준 성능(10%)으로 제한됩니다. 갑자기 서버가 느려지면 CPU 크레딧을 의심하세요. CloudWatch에서 <code>CPUCreditBalance</code> 지표로 확인 가능합니다.</p>
+            </div>
+          </div>
+        </div>
+
+        <p>학습 목적으로는 t3.micro면 충분합니다. 크레딧이 고갈되기 전에 실습을 마치고 인스턴스를 종료하면 되니까요.</p>
+      </section>
+
+      <!-- ③ EBS와 AMI -->
+      <section class="content-section" id="ebs">
+        <div class="section-label">03</div>
+        <h2>EBS와 AMI</h2>
+
+        <h3>EBS — EC2의 하드 드라이브</h3>
+        <p>EBS(Elastic Block Store)는 EC2에 붙이는 가상 디스크입니다. EC2를 중지하거나 종료해도 EBS 볼륨의 데이터는 유지됩니다(설정에 따라 다름).</p>
+
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead>
+              <tr><th>볼륨 유형</th><th>특징</th><th>용도</th><th>서울 요금</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>gp3</strong></td><td>범용 SSD · 기본 제공 3000 IOPS</td><td>대부분의 상황</td><td>$0.08/GB·월</td></tr>
+              <tr><td><strong>gp2</strong></td><td>범용 SSD · IOPS가 크기에 비례</td><td>레거시 (gp3 권장)</td><td>$0.10/GB·월</td></tr>
+              <tr><td><strong>io2</strong></td><td>고성능 SSD · IOPS 직접 지정</td><td>고성능 DB</td><td>$0.138/GB·월</td></tr>
+              <tr><td><strong>st1</strong></td><td>처리량 최적화 HDD</td><td>로그·빅데이터</td><td>$0.051/GB·월</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout-warn">
+          <span class="callout-icon">💰</span>
+          <div class="callout-body">
+            <strong>EBS는 인스턴스를 종료해도 남을 수 있습니다</strong><br>
+            인스턴스 생성 시 "종료 시 삭제" 옵션이 기본으로 켜져 있지만, 루트 볼륨이 아닌 추가 볼륨은 남습니다. EC2 → 볼륨 메뉴에서 <code>available</code> 상태로 남은 볼륨을 꼭 확인하세요. GB당 월 $0.08로 조용히 과금됩니다.
+          </div>
+        </div>
+
+        <h3>AMI — 서버의 스냅샷</h3>
+        <p>AMI(Amazon Machine Image)는 인스턴스를 만들기 위한 <strong>운영체제 + 설정의 템플릿</strong>입니다. AWS가 제공하는 공식 AMI도 있고, 내 인스턴스를 AMI로 만들어서 같은 설정의 서버를 여러 개 찍어낼 수도 있습니다.</p>
+
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead>
+              <tr><th>AMI</th><th>특징</th><th>권장 상황</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Amazon Linux 2023</td><td>AWS 최적화 · dnf 패키지 매니저</td><td>대부분의 경우</td></tr>
+              <tr><td>Ubuntu 22.04 LTS</td><td>익숙한 환경 · apt 패키지 매니저</td><td>Ubuntu 경험자</td></tr>
+              <tr><td>Amazon Linux 2</td><td>구 버전 · 2025년 지원 종료</td><td>레거시 호환 필요 시</td></tr>
+              <tr><td>커스텀 AMI</td><td>직접 만든 이미지</td><td>Auto Scaling, 빠른 배포</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ④ 보안 그룹 -->
+      <section class="content-section" id="sg">
+        <div class="section-label">04</div>
+        <h2>보안 그룹 — 인스턴스 방화벽</h2>
+        <p>보안 그룹은 EC2 인스턴스 앞에 붙는 <strong>가상 방화벽</strong>입니다. 어떤 IP에서 어떤 포트로 들어오는 트래픽을 허용할지 규칙을 정합니다.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-header">🛡 보안 그룹 동작 방식</div>
+          <div class="diagram-body">
+            <div style="display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap">
+              <div style="text-align:center">
+                <div style="font-size:24px">🌐</div>
+                <div style="font-size:12px;color:var(--text-3)">인터넷</div>
+              </div>
+              <div style="font-size:20px;color:var(--text-4)">→</div>
+              <div style="background:var(--cat-basics-bg);border:2px solid var(--cat-basics-h);border-radius:12px;padding:16px;text-align:center;min-width:160px">
+                <div style="font-size:11px;font-weight:700;color:var(--cat-basics-text);margin-bottom:8px">🛡 보안 그룹</div>
+                <div style="font-size:11px;color:var(--text-2);text-align:left;line-height:1.8">
+                  ✅ TCP 22 (SSH)<br>&nbsp;&nbsp;&nbsp;← 내 IP만<br>
+                  ✅ TCP 80 (HTTP)<br>&nbsp;&nbsp;&nbsp;← 0.0.0.0/0<br>
+                  ✅ TCP 443 (HTTPS)<br>&nbsp;&nbsp;&nbsp;← 0.0.0.0/0<br>
+                  ✅ TCP 8080<br>&nbsp;&nbsp;&nbsp;← ALB 보안 그룹<br>
+                  ❌ 나머지 전부 차단
+                </div>
+              </div>
+              <div style="font-size:20px;color:var(--text-4)">→</div>
+              <div style="text-align:center">
+                <div style="font-size:24px">🖥</div>
+                <div style="font-size:12px;color:var(--text-3)">EC2 인스턴스</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h3>보안 그룹 핵심 특성</h3>
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead>
+              <tr><th>특성</th><th>내용</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Stateful</strong></td><td>인바운드를 허용하면 응답(아웃바운드)은 자동 허용. 명시적으로 아웃바운드 규칙을 따로 안 써도 됨</td></tr>
+              <tr><td><strong>허용 기반</strong></td><td>명시적으로 허용한 것만 통과. 나머지는 자동 거부 (Deny 규칙 없음)</td></tr>
+              <tr><td><strong>소스로 보안 그룹 지정</strong></td><td>IP 대신 다른 보안 그룹을 소스로 지정 가능. ALB → EC2 처럼 서비스 간 연결에 사용</td></tr>
+              <tr><td><strong>여러 인스턴스에 적용</strong></td><td>하나의 보안 그룹을 여러 인스턴스에 붙일 수 있음</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout-warn">
+          <span class="callout-icon">🚨</span>
+          <div class="callout-body">
+            <strong>SSH(22번) 소스를 0.0.0.0/0으로 열지 마세요</strong><br>
+            전체 IP에 SSH를 열면 인터넷 스캐너가 수분 안에 찾아내 무차별 로그인을 시도합니다. 반드시 <strong>내 IP만</strong> 허용하세요. 애플리케이션 포트(8080 등)는 ALB 보안 그룹에서만 허용하고, 외부 직접 접근을 막는 것이 실무 원칙입니다.
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑤ 키 페어·IP -->
+      <section class="content-section" id="keypair">
+        <div class="section-label">05</div>
+        <h2>키 페어 · IP · ENI</h2>
+
+        <h3>키 페어 — SSH 접속 열쇠</h3>
+        <p>EC2에 SSH로 접속하려면 비밀번호 대신 <strong>키 페어(공개키/개인키 쌍)</strong>를 씁니다. AWS가 공개키를 인스턴스에 넣어두고, 내가 개인키(.pem 파일)로 접속합니다.</p>
+
+        <div class="callout callout-danger">
+          <span class="callout-icon">🔑</span>
+          <div class="callout-body">
+            <strong>.pem 파일은 재발급이 안 됩니다</strong><br>
+            생성 시 딱 한 번만 다운로드할 수 있습니다. 잃어버리면 해당 인스턴스에 SSH로 다시 접속할 방법이 없습니다. 잃어버리면 인스턴스를 새로 만들어야 합니다. 안전한 곳에 보관하세요.
+          </div>
+        </div>
+
+        <h3>IP 주소 세 종류</h3>
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead>
+              <tr><th>종류</th><th>특징</th><th>재시작 시</th><th>요금</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>퍼블릭 IP</strong></td>
+                <td>인터넷에서 접근 가능한 IP. 자동 할당</td>
+                <td>변경됨</td>
+                <td>인스턴스 실행 중 무료</td>
+              </tr>
+              <tr>
+                <td><strong>프라이빗 IP</strong></td>
+                <td>VPC 내부에서만 사용. 항상 고정</td>
+                <td>유지</td>
+                <td>무료</td>
+              </tr>
+              <tr>
+                <td><strong>탄력적 IP</strong></td>
+                <td>고정 퍼블릭 IP. 내가 직접 할당</td>
+                <td>유지</td>
+                <td>미연결 시 과금 ⚠️</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout-warn">
+          <span class="callout-icon">💰</span>
+          <div class="callout-body">
+            <strong>탄력적 IP 함정</strong><br>
+            탄력적 IP는 인스턴스에 연결돼 있을 때는 무료입니다. 하지만 <strong>인스턴스 없이 방치하면 시간당 과금</strong>됩니다. 인스턴스를 종료할 때 탄력적 IP를 릴리스하는 걸 잊지 마세요.
+          </div>
+        </div>
+
+        <h3>ENI — 네트워크 카드</h3>
+        <p>ENI(Elastic Network Interface)는 EC2의 가상 네트워크 카드입니다. 하나의 인스턴스에 여러 ENI를 붙일 수 있어서, 여러 IP나 여러 서브넷에 동시에 연결할 수 있습니다. 고급 네트워크 구성에서 나오는 개념으로, 지금은 "EC2의 네트워크 인터페이스"라는 정도만 알면 됩니다.</p>
+      </section>
+
+      <!-- ⑥ 실습 — 인스턴스 생성 -->
+      <section class="content-section" id="launch">
+        <div class="section-label">실습 01</div>
+        <h2>EC2 인스턴스 생성하기</h2>
+
+        <div class="callout callout-warn">
+          <span class="callout-icon">⏱</span>
+          <div class="callout-body">
+            <strong>지금부터 과금 시작</strong><br>
+            인스턴스를 생성하는 순간부터 시간당 요금이 부과됩니다. t3.micro 기준 시간당 약 $0.013. 실습이 끝나면 반드시 종료(Terminate)하세요.
+          </div>
+        </div>
+
+        <ol style="font-size:15px;color:var(--text-2);line-height:2;padding-left:20px;margin-bottom:24px">
+          <li>AWS 콘솔 → 검색창에 <code>EC2</code> 입력 → EC2 콘솔 진입</li>
+          <li>좌측 메뉴 <strong>인스턴스</strong> → 우측 상단 <strong>인스턴스 시작</strong></li>
+          <li><strong>이름</strong>: <code>my-spring-server</code></li>
+          <li><strong>AMI</strong>: Amazon Linux 2023 AMI 선택 (Quick Start 첫 번째 항목)</li>
+          <li><strong>인스턴스 유형</strong>: <code>t3.micro</code> (학습용) 또는 <code>t3.medium</code> (Spring Boot 권장)</li>
+          <li><strong>키 페어</strong>: 새 키 페어 생성 → 이름 <code>my-key</code> → <strong>.pem 다운로드 → 안전한 곳 보관</strong></li>
+          <li><strong>네트워크 설정</strong>:
+            <ul style="margin:4px 0 0 20px;line-height:2">
+              <li>보안 그룹 새로 생성</li>
+              <li>SSH(22): <strong>내 IP</strong> 선택 — 0.0.0.0/0 절대 금지</li>
+              <li>HTTP(80): 위치 무관(0.0.0.0/0)</li>
+            </ul>
+          </li>
+          <li><strong>스토리지</strong>: 8 GiB gp3 그대로 (절대 키우지 마세요)</li>
+          <li><strong>인스턴스 시작</strong> 클릭</li>
+        </ol>
+
+        <div class="callout callout-tip">
+          <span class="callout-icon">💡</span>
+          <div class="callout-body">
+            <strong>리전 확인 필수</strong><br>
+            인스턴스 생성 전, 콘솔 우측 상단이 <strong>아시아 태평양(서울)</strong>인지 확인하세요. 다른 리전에 만들면 나중에 못 찾습니다.
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑦ 실습 — SSH 접속 -->
+      <section class="content-section" id="ssh">
+        <div class="section-label">실습 02</div>
+        <h2>SSH로 EC2 접속하기</h2>
+        <p>인스턴스 상태가 <strong>실행 중(running)</strong>이 되면 접속할 수 있습니다. 보통 1~2분 걸립니다.</p>
+
+        <h3>macOS / Linux</h3>
+        <div class="diagram-card">
+          <div class="diagram-header">💻 터미널 명령어</div>
+          <div class="diagram-body">
+            <pre style="background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:8px;font-size:13px;line-height:1.8;overflow-x:auto;margin:0"><code><span style="color:#6C7086"># 1. 키 파일 권한 설정 (처음 한 번만)</span>
+chmod 400 ~/Downloads/my-key.pem
+
+<span style="color:#6C7086"># 2. SSH 접속 (퍼블릭 IP는 EC2 콘솔에서 확인)</span>
+ssh -i ~/Downloads/my-key.pem ec2-user@<span style="color:#A6E3A1">퍼블릭IP</span>
+
+<span style="color:#6C7086"># Amazon Linux 2023 기본 사용자: ec2-user</span>
+<span style="color:#6C7086"># Ubuntu: ubuntu / Debian: admin</span></code></pre>
+          </div>
+        </div>
+
+        <h3>Windows (PowerShell)</h3>
+        <div class="diagram-card">
+          <div class="diagram-header">💻 PowerShell 명령어</div>
+          <div class="diagram-body">
+            <pre style="background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:8px;font-size:13px;line-height:1.8;overflow-x:auto;margin:0"><code>ssh -i C:\Users\사용자명\Downloads\my-key.pem ec2-user@<span style="color:#A6E3A1">퍼블릭IP</span></code></pre>
+          </div>
+        </div>
+
+        <div class="callout callout-warn">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            <strong>SSH 접속 안 될 때 확인 순서</strong><br>
+            1. 인스턴스 상태가 <strong>실행 중</strong>인가<br>
+            2. 보안 그룹 인바운드에 SSH(22)가 <strong>내 현재 IP</strong>로 열려 있는가 (IP가 바뀌었을 수 있음)<br>
+            3. 키 파일 경로가 정확한가<br>
+            4. chmod 400을 했는가 (macOS/Linux)
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑧ 실습 — Spring Boot 배포 -->
+      <section class="content-section" id="deploy">
+        <div class="section-label">실습 03</div>
+        <h2>Spring Boot 배포하기</h2>
+
+        <h3>1단계 — Java 설치</h3>
+        <div class="diagram-card">
+          <div class="diagram-header">☕ Amazon Linux 2023에 Java 17 설치</div>
+          <div class="diagram-body">
+            <pre style="background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:8px;font-size:13px;line-height:1.8;overflow-x:auto;margin:0"><code><span style="color:#6C7086"># 패키지 업데이트</span>
+sudo dnf update -y
+
+<span style="color:#6C7086"># Java 17 설치 (Amazon Corretto)</span>
+sudo dnf install java-17-amazon-corretto -y
+
+<span style="color:#6C7086"># 설치 확인</span>
+java -version</code></pre>
+          </div>
+        </div>
+
+        <h3>2단계 — jar 파일 업로드</h3>
+        <div class="diagram-card">
+          <div class="diagram-header">📦 로컬에서 EC2로 파일 전송 (scp)</div>
+          <div class="diagram-body">
+            <pre style="background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:8px;font-size:13px;line-height:1.8;overflow-x:auto;margin:0"><code><span style="color:#6C7086"># 로컬 터미널에서 실행 (EC2가 아님)</span>
+scp -i ~/Downloads/my-key.pem \
+  ./build/libs/myapp-0.0.1-SNAPSHOT.jar \
+  ec2-user@<span style="color:#A6E3A1">퍼블릭IP</span>:/home/ec2-user/app.jar</code></pre>
+          </div>
+        </div>
+
+        <h3>3단계 — 실행 및 서비스 등록</h3>
+        <div class="diagram-card">
+          <div class="diagram-header">🚀 systemd 서비스로 등록 (재시작 시 자동 실행)</div>
+          <div class="diagram-body">
+            <pre style="background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:8px;font-size:13px;line-height:1.8;overflow-x:auto;margin:0"><code><span style="color:#6C7086"># 서비스 파일 생성</span>
+sudo tee /etc/systemd/system/myapp.service &lt;&lt;EOF
+[Unit]
+Description=My Spring Boot App
+After=network.target
+
+[Service]
+User=ec2-user
+WorkingDirectory=/home/ec2-user
+ExecStart=/usr/bin/java -Xmx512m -jar /home/ec2-user/app.jar
+Restart=always
+RestartSec=10
+Environment="SPRING_PROFILES_ACTIVE=prod"
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+<span style="color:#6C7086"># 서비스 등록 및 시작</span>
+sudo systemctl daemon-reload
+sudo systemctl enable myapp
+sudo systemctl start myapp
+
+<span style="color:#6C7086"># 상태 확인</span>
+sudo systemctl status myapp
+
+<span style="color:#6C7086"># 실시간 로그 확인</span>
+sudo journalctl -u myapp -f</code></pre>
+          </div>
+        </div>
+
+        <div class="callout callout-tip">
+          <span class="callout-icon">💡</span>
+          <div class="callout-body">
+            <strong>환경변수 주입</strong><br>
+            DB 비밀번호 같은 민감한 설정은 서비스 파일의 <code>Environment</code>에 넣거나, AWS Systems Manager Parameter Store에서 가져오는 방식을 씁니다. <code>application.yml</code>에 하드코딩하지 마세요.
+          </div>
+        </div>
+
+        <h3>4단계 — 보안 그룹에 포트 추가</h3>
+        <p>Spring Boot가 8080 포트로 뜬다면, 보안 그룹 인바운드에 TCP 8080을 추가해야 합니다.</p>
+        <ol style="font-size:15px;color:var(--text-2);line-height:2;padding-left:20px">
+          <li>EC2 콘솔 → 해당 인스턴스 클릭 → <strong>보안</strong> 탭</li>
+          <li>보안 그룹 이름 클릭 → <strong>인바운드 규칙 편집</strong></li>
+          <li>규칙 추가: 유형=사용자 지정 TCP, 포트=8080, 소스=내 IP (테스트용)</li>
+          <li>저장 후 브라우저에서 <code>http://퍼블릭IP:8080</code> 접속 확인</li>
+        </ol>
+      </section>
+
+      <!-- ⑨ 유저 데이터·메타데이터 -->
+      <section class="content-section" id="metadata">
+        <div class="section-label">실습 04</div>
+        <h2>유저 데이터와 메타데이터</h2>
+
+        <h3>유저 데이터 — 인스턴스 시작 시 자동 실행</h3>
+        <p>인스턴스 생성 시 <strong>유저 데이터(User Data)</strong>에 스크립트를 넣으면, 처음 부팅할 때 자동으로 실행됩니다. Java 설치, 애플리케이션 다운로드, 서비스 등록을 자동화하는 데 씁니다.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-header">🤖 유저 데이터 스크립트 예시</div>
+          <div class="diagram-body">
+            <pre style="background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:8px;font-size:13px;line-height:1.8;overflow-x:auto;margin:0"><code>#!/bin/bash
+<span style="color:#6C7086"># 인스턴스 최초 부팅 시 자동 실행됨</span>
+dnf update -y
+dnf install java-17-amazon-corretto -y
+
+<span style="color:#6C7086"># S3에서 jar 파일 다운로드</span>
+aws s3 cp s3://my-bucket/app.jar /home/ec2-user/app.jar
+
+<span style="color:#6C7086"># 서비스 등록 및 시작</span>
+systemctl enable myapp
+systemctl start myapp</code></pre>
+          </div>
+        </div>
+
+        <p>EC2 생성 화면 → <strong>고급 세부 정보</strong> → 맨 아래 <strong>사용자 데이터</strong> 칸에 입력하면 됩니다.</p>
+
+        <h3>메타데이터 — 인스턴스 자기 자신에 대한 정보</h3>
+        <p>EC2 인스턴스 안에서 자기 자신의 IP, 인스턴스 ID, 리전 등을 조회하려면 메타데이터 서버를 씁니다.</p>
+        <div class="diagram-card">
+          <div class="diagram-header">🔍 메타데이터 조회 예시</div>
+          <div class="diagram-body">
+            <pre style="background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:8px;font-size:13px;line-height:1.8;overflow-x:auto;margin:0"><code><span style="color:#6C7086"># IMDSv2 방식 (보안 강화 버전)</span>
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+
+<span style="color:#6C7086"># 인스턴스 ID 조회</span>
+curl -H "X-aws-ec2-metadata-token: $TOKEN" \
+  http://169.254.169.254/latest/meta-data/instance-id
+
+<span style="color:#6C7086"># 퍼블릭 IP 조회</span>
+curl -H "X-aws-ec2-metadata-token: $TOKEN" \
+  http://169.254.169.254/latest/meta-data/public-ipv4</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑩ 탄력적 IP -->
+      <section class="content-section" id="eip">
+        <div class="section-label">실습 05</div>
+        <h2>탄력적 IP 할당하기</h2>
+        <p>인스턴스를 재시작할 때마다 퍼블릭 IP가 바뀝니다. DNS에 고정 IP를 등록하거나, 팀원들에게 접속 주소를 공유할 때 문제가 됩니다. 탄력적 IP로 고정합니다.</p>
+
+        <ol style="font-size:15px;color:var(--text-2);line-height:2;padding-left:20px">
+          <li>EC2 콘솔 좌측 메뉴 → <strong>탄력적 IP</strong></li>
+          <li><strong>탄력적 IP 주소 할당</strong> → 기본값 그대로 → <strong>할당</strong></li>
+          <li>할당된 IP 선택 → <strong>작업 → 탄력적 IP 주소 연결</strong></li>
+          <li>인스턴스 선택 → <strong>연결</strong></li>
+        </ol>
+
+        <div class="callout callout-warn">
+          <span class="callout-icon">💰</span>
+          <div class="callout-body">
+            <strong>실습 후 반드시 릴리스</strong><br>
+            인스턴스를 종료하면 탄력적 IP 연결이 끊어지고, 연결되지 않은 IP는 시간당 과금됩니다. 실습 후 <strong>작업 → 탄력적 IP 주소 릴리스</strong>를 반드시 하세요.
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑪ EC2 사이즈 변경 -->
+      <section class="content-section" id="resize">
+        <div class="section-label">실습 06</div>
+        <h2>EC2 사이즈 변경하기</h2>
+        <p>인스턴스 유형은 나중에 바꿀 수 있습니다. t3.micro → t3.medium 처럼 업그레이드하거나, 반대로 다운그레이드도 됩니다.</p>
+
+        <div class="callout callout-warn">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            <strong>사이즈 변경은 중지(Stop) 후에만 가능합니다</strong><br>
+            실행 중인 인스턴스는 유형을 바꿀 수 없습니다. 먼저 중지하고, 유형 변경 후 다시 시작합니다. 이 과정에서 퍼블릭 IP가 바뀝니다(탄력적 IP 없는 경우).
+          </div>
+        </div>
+
+        <ol style="font-size:15px;color:var(--text-2);line-height:2;padding-left:20px">
+          <li>인스턴스 선택 → <strong>인스턴스 상태 → 중지(Stop)</strong></li>
+          <li>중지 완료 대기</li>
+          <li>인스턴스 선택 → <strong>작업 → 인스턴스 설정 → 인스턴스 유형 변경</strong></li>
+          <li>원하는 유형 선택 → <strong>적용</strong></li>
+          <li>인스턴스 상태 → <strong>시작(Start)</strong></li>
+        </ol>
+      </section>
+
+      <!-- ⑫ EC2 접속 방법 -->
+      <section class="content-section" id="connect">
+        <div class="section-label">실습 07</div>
+        <h2>EC2 접속 방법 3가지</h2>
+
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead>
+              <tr><th>방법</th><th>특징</th><th>키 페어 필요</th><th>권장 상황</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>SSH</strong></td>
+                <td>전통적인 방법. 키 파일 사용</td>
+                <td>✅ 필요</td>
+                <td>일반적인 경우</td>
+              </tr>
+              <tr>
+                <td><strong>EC2 Instance Connect</strong></td>
+                <td>콘솔에서 바로 접속. 브라우저 터미널</td>
+                <td>❌ 불필요</td>
+                <td>키 파일 없을 때 빠른 접속</td>
+              </tr>
+              <tr>
+                <td><strong>Session Manager</strong></td>
+                <td>IAM 권한으로 접속. 포트 22 불필요</td>
+                <td>❌ 불필요</td>
+                <td>보안 강화 환경 · SSH 포트 닫아도 됨</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Session Manager 설정 (권장)</h3>
+        <p>Session Manager를 쓰면 <strong>보안 그룹에서 SSH(22) 포트를 열지 않아도</strong> EC2에 접속할 수 있습니다. IAM 역할로 권한을 제어하고, 모든 세션이 CloudTrail에 기록됩니다. ISMS-P 감사에서 SSH 포트 노출 여부를 체크하는데, Session Manager를 쓰면 이 항목을 통과합니다.</p>
+
+        <ol style="font-size:15px;color:var(--text-2);line-height:2;padding-left:20px">
+          <li>EC2에 붙은 IAM 역할에 <code>AmazonSSMManagedInstanceCore</code> 정책 추가</li>
+          <li>EC2 콘솔 → 인스턴스 선택 → <strong>연결 → Session Manager → 연결</strong></li>
+          <li>브라우저에서 터미널이 열림</li>
+        </ol>
+      </section>
+
+      <!-- ⑬ 요금 모델 -->
+      <section class="content-section" id="pricing">
+        <div class="section-label">08</div>
+        <h2>EC2 요금 모델</h2>
+
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead>
+              <tr><th>모델</th><th>계약</th><th>할인율</th><th>권장 상황</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>온디맨드</strong></td>
+                <td>없음 · 초 단위 과금</td>
+                <td>기준</td>
+                <td>학습 · 단기 프로젝트</td>
+              </tr>
+              <tr>
+                <td><strong>예약 인스턴스</strong></td>
+                <td>1년 또는 3년 약정</td>
+                <td>최대 72% 할인</td>
+                <td>24시간 돌아가는 프로덕션</td>
+              </tr>
+              <tr>
+                <td><strong>스팟 인스턴스</strong></td>
+                <td>없음 · AWS가 필요하면 뺏어감</td>
+                <td>최대 90% 할인</td>
+                <td>배치 처리 · 중단 허용 작업</td>
+              </tr>
+              <tr>
+                <td><strong>Savings Plans</strong></td>
+                <td>1년 또는 3년 · 사용량 약정</td>
+                <td>최대 66% 할인</td>
+                <td>인스턴스 유형이 바뀔 수 있는 경우</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout-tip">
+          <span class="callout-icon">💡</span>
+          <div class="callout-body">
+            <strong>학습 중에는 온디맨드만</strong><br>
+            예약 인스턴스는 약정이라 실수로 계속 켜놓아도 요금이 나갑니다. 학습 중에는 온디맨드로 만들고, 쓰고 나서 바로 종료하는 습관을 들이세요.
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑭ 정리 — 트러블슈팅·삭제 -->
+      <section class="content-section" id="cleanup">
+        <div class="section-label">정리</div>
+        <h2>트러블슈팅 & 정리</h2>
+
+        <h3>흔한 문제들</h3>
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead>
+              <tr><th>증상</th><th>원인</th><th>해결</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>SSH Connection refused</td>
+                <td>보안 그룹 22포트 미개방 또는 내 IP 변경</td>
+                <td>보안 그룹 인바운드 규칙 확인 및 내 IP 업데이트</td>
+              </tr>
+              <tr>
+                <td>Permission denied (publickey)</td>
+                <td>잘못된 키 파일 또는 chmod 미설정</td>
+                <td><code>chmod 400 키.pem</code> 확인, 키 파일 경로 확인</td>
+              </tr>
+              <tr>
+                <td>서버가 갑자기 느려짐</td>
+                <td>T타입 CPU 크레딧 고갈</td>
+                <td>CloudWatch → CPUCreditBalance 확인. 인스턴스 유형 업그레이드 고려</td>
+              </tr>
+              <tr>
+                <td>Spring Boot 접속 안 됨</td>
+                <td>보안 그룹에 8080 미개방 또는 앱 실행 실패</td>
+                <td>보안 그룹 확인, <code>journalctl -u myapp</code>로 로그 확인</td>
+              </tr>
+              <tr>
+                <td>인스턴스 목록에 내 서버가 없음</td>
+                <td>리전이 다름</td>
+                <td>콘솔 우측 상단 리전을 서울로 변경</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>⚠️ 실습 후 정리 체크리스트</h3>
+        <div class="callout callout-danger">
+          <span class="callout-icon">🗑</span>
+          <div class="callout-body">
+            <strong>아래 순서대로 정리하세요</strong><br>
+            <ol style="margin:8px 0 0;padding-left:18px;line-height:2">
+              <li>인스턴스 선택 → <strong>인스턴스 상태 → 종료(Terminate)</strong> — 중지(Stop)가 아님!</li>
+              <li>EC2 → <strong>볼륨</strong> → <code>available</code> 상태 볼륨 있으면 삭제</li>
+              <li>EC2 → <strong>탄력적 IP</strong> → 연결되지 않은 IP 릴리스</li>
+              <li>EC2 → <strong>스냅샷</strong> → 테스트로 만든 스냅샷 삭제</li>
+              <li>EC2 → <strong>AMI</strong> → 테스트로 만든 AMI 등록 취소</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-card-title">📌 CH02 핵심 개념 요약</div>
+          <div class="summary-item">
+            <span class="summary-term">인스턴스 유형</span>
+            <span>패밀리(t=범용 버스트) + 세대(3) + 크기(micro). 학습=t3.micro, Spring Boot=t3.medium</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-term">T타입 버스트</span>
+            <span>평소에 크레딧 적립, 순간 고부하 시 소모. 고갈되면 10% 성능으로 제한</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-term">EBS</span>
+            <span>EC2의 가상 디스크. 인스턴스 종료 후에도 남을 수 있음. available 볼륨 확인 필수</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-term">보안 그룹</span>
+            <span>Stateful 방화벽. SSH(22)는 내 IP만. 앱 포트는 ALB 보안 그룹에서만</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-term">탄력적 IP</span>
+            <span>고정 퍼블릭 IP. 미연결 시 과금. 실습 후 반드시 릴리스</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-term">중지 vs 종료</span>
+            <span>중지(Stop) = EBS 요금 계속. 종료(Terminate) = 완전 삭제. 정리는 반드시 종료</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-term">Session Manager</span>
+            <span>SSH 포트 없이 IAM 권한으로 접속. ISMS-P 대응에 유리</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Prev/Next -->
+      <div class="chapter-pagination">
+        <a href="/chapters/ch01/" class="pag-link pag-prev">
+          <span class="pag-dir">← 이전 챕터</span>
+          <span class="pag-title">CH01 AWS 기초 개념</span>
+          <span class="pag-sub">클라우드 · 가상화 · AWS 구조 · IAM</span>
+        </a>
+        <a href="/chapters/ch03/" class="pag-link pag-next">
+          <span class="pag-dir">다음 챕터 →</span>
+          <span class="pag-title">CH03 Amazon VPC</span>
+          <span class="pag-sub">가상 네트워크 설계</span>
+        </a>
+      </div>
+
+    </main>
+
+    <!-- ── Sidebar TOC ── -->
+    <aside class="chapter-toc">
+      <div class="toc-card">
+        <div class="toc-title">이 챕터의 목차</div>
+        <ul class="toc-list">
+          <li><a href="#what" class="toc-link">01 · EC2란</a></li>
+          <li><a href="#what" class="toc-link toc-link-h3">인스턴스 유형 읽는 법</a></li>
+          <li><a href="#tburst" class="toc-link">02 · T타입 버스트</a></li>
+          <li><a href="#ebs" class="toc-link">03 · EBS와 AMI</a></li>
+          <li><a href="#sg" class="toc-link">04 · 보안 그룹</a></li>
+          <li><a href="#keypair" class="toc-link">05 · 키 페어 · IP · ENI</a></li>
+          <li><a href="#launch" class="toc-link">실습 01 · 인스턴스 생성</a></li>
+          <li><a href="#ssh" class="toc-link">실습 02 · SSH 접속</a></li>
+          <li><a href="#deploy" class="toc-link">실습 03 · Spring Boot 배포</a></li>
+          <li><a href="#metadata" class="toc-link">실습 04 · 유저 데이터</a></li>
+          <li><a href="#eip" class="toc-link">실습 05 · 탄력적 IP</a></li>
+          <li><a href="#resize" class="toc-link">실습 06 · 사이즈 변경</a></li>
+          <li><a href="#connect" class="toc-link">실습 07 · 접속 방법 3가지</a></li>
+          <li><a href="#pricing" class="toc-link">08 · 요금 모델</a></li>
+          <li><a href="#cleanup" class="toc-link">정리 · 트러블슈팅</a></li>
+        </ul>
+      </div>
+    </aside>
+
+  </div><!-- /chapter-layout -->
+</div><!-- /container -->
+
+<!-- ── Footer ── -->
+<footer class="site-footer">
+  <div class="container">
+    <p>AWS 완전 정복 가이드 · CH02 · Amazon EC2<br>Spring Boot 기준 · 비학습 항목 제외</p>
+  </div>
+</footer>
+
+<script src="../../assets/nav.js"></script>
 </body>
 </html>
