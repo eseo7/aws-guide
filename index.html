@@ -1,219 +1,426 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AWS 완전 정복 가이드</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/style.css">
-<style>
-/* 목차 전용 스타일 */
-.hero { padding: 64px 0 48px; border-bottom: 2px solid var(--ink); }
-.hero h1 { font-size: clamp(28px,5vw,46px); font-weight:700; letter-spacing:-.02em; line-height:1.15; margin-bottom:16px; }
-.hero h1 span { display:block; color:var(--muted); font-weight:300; font-size:.52em; margin-top:8px; }
-.hero .sub { color:var(--muted); font-size:15px; font-weight:300; max-width:60ch; margin-bottom:28px; }
-.stats { display:flex; flex-wrap:wrap; gap:24px; margin-bottom:28px; }
-.stat dt { font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
-.stat dd { font-family:var(--mono); font-size:22px; font-weight:600; color:var(--rail); }
-.stages { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
-.stage { background:var(--card); padding:12px 14px; }
-.stage dt { font-family:var(--mono); font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
-.stage dd { font-size:13px; font-weight:500; }
-@media(max-width:600px){ .stages{grid-template-columns:repeat(2,1fr)} }
-
-/* 챕터 카드 목록 */
-.toc { padding: 48px 0; }
-.toc-stage-label {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .16em;
-  text-transform: uppercase; color: var(--muted);
-  margin: 36px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--line);
-}
-.toc-stage-label:first-child { margin-top: 0; }
-
-.ch-card {
-  display: grid; grid-template-columns: 72px 1fr auto;
-  gap: 0 16px; align-items: center;
-  padding: 16px 0; border-bottom: 1px solid var(--line);
-  text-decoration: none; color: var(--ink);
-  transition: background .15s;
-}
-.ch-card:hover { background: var(--card); margin: 0 -16px; padding: 16px; }
-.ch-card:last-child { border-bottom: none; }
-.ch-card .num {
-  font-family: var(--mono); font-size: 28px; font-weight: 600;
-  color: var(--line); line-height: 1; letter-spacing: -.03em;
-}
-.ch-card .info {}
-.ch-card .info .title { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
-.ch-card .info .svc { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .03em; }
-.ch-card .tags { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
-
-.wip {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .06em;
-  color: var(--muted); border: 1px solid var(--line);
-  padding: 2px 7px; white-space: nowrap;
-}
-
-footer { padding: 40px 0 60px; border-top: 1px solid var(--line); }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AWS 완전 정복 가이드</title>
+  <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
 
-<nav class="topnav">
-  <div class="topnav-in">
-    <span class="topnav-current" style="font-size:12px">aws-guide</span>
-    <div class="topnav-progress" style="max-width:120px">
-      <div class="topnav-fill" style="width:100%"></div>
+<!-- ── Site Header ─────────────────────────────────────── -->
+<header class="site-header">
+  <div class="container">
+    <div class="header-inner">
+      <a href="/" class="logo">
+        <span class="logo-icon">☁</span>
+        <span class="logo-text">AWS 완전 정복 가이드</span>
+        <span class="logo-sub">Spring Boot 기준</span>
+      </a>
+      <div class="header-progress">
+        <div class="header-prog-bar">
+          <div class="header-prog-fill" style="width:0%"></div>
+        </div>
+        <span class="header-prog-label">0%</span>
+      </div>
     </div>
   </div>
-</nav>
-
-<div class="wrap">
-
-<header class="hero">
-  <p class="ch-eyebrow">AWS 완전 정복 가이드 · Spring Boot 기준</p>
-  <h1>인프라를 직접 구성할 수 있는 수준까지<span>사전 지식부터 실전 아키텍처·CI/CD·모니터링까지</span></h1>
-  <p class="sub">AWS 강의실 기초 강의 + 인프런 배포 강의 두 커리큘럼을 합쳐 재편했습니다.</p>
-  <dl class="stats">
-    <div class="stat"><dt>챕터</dt><dd>12</dd></div>
-    <div class="stat"><dt>섹션</dt><dd>118</dd></div>
-    <div class="stat"><dt>실습</dt><dd>54</dd></div>
-    <div class="stat"><dt>개념</dt><dd>38</dd></div>
-  </dl>
-  <dl class="stages">
-    <div class="stage"><dt>사전·기초</dt><dd>CH 00–01</dd></div>
-    <div class="stage"><dt>핵심 서비스</dt><dd>CH 02–07</dd></div>
-    <div class="stage"><dt>운영·자동화</dt><dd>CH 08–09</dd></div>
-    <div class="stage"><dt>실전·심화</dt><dd>CH 10–11</dd></div>
-  </dl>
 </header>
 
-<div class="toc">
+<!-- ── Hero ────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-badge">☁ 12개 챕터 완성 커리큘럼</div>
+    <h1 class="hero-title">인프라를 직접 구성할 수 있는 수준까지</h1>
+    <p class="hero-desc">사전 지식부터 실전 아키텍처·CI/CD·모니터링까지<br>AWS 강의실 기초 강의 + 인프런 배포 강의를 합쳐 재편했습니다.</p>
 
-  <p class="toc-stage-label">사전·기초</p>
-
-  <a class="ch-card" href="/chapters/ch00/">
-    <div class="num">00</div>
-    <div class="info">
-      <div class="title">사전 지식 — 네트워크·보안 기초</div>
-      <div class="svc">OSI 7 Layer · DNS · 캐싱 · 암호화 · RDBMS vs NoSQL</div>
+    <div class="stats-row">
+      <div class="stat">
+        <span class="stat-num">12</span>
+        <span class="stat-label">챕터</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">118</span>
+        <span class="stat-label">섹션</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">54</span>
+        <span class="stat-label">실습</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">38</span>
+        <span class="stat-label">개념</span>
+      </div>
     </div>
-    <div class="tags"><span class="tag stage">사전·기초</span><span class="tag safe">과금 없음</span></div>
-  </a>
 
-  <a class="ch-card" href="/chapters/ch01/">
-    <div class="num">01</div>
-    <div class="info">
-      <div class="title">AWS 기초 개념</div>
-      <div class="svc">클라우드 · 가상화 · AWS 구조 · 계정 · IAM</div>
+    <div class="progress-block">
+      <div class="progress-head">
+        <span class="progress-title-text">내 진행률</span>
+        <span class="progress-label">0 / 12 챕터</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" style="width:0%"></div>
+      </div>
     </div>
-    <div class="tags"><span class="tag stage">사전·기초</span><span class="tag safe">과금 없음</span></div>
-  </a>
 
-  <p class="toc-stage-label">핵심 서비스</p>
+    <nav class="course-nav" aria-label="섹션 바로가기">
+      <a href="#basics" class="course-tab active-basics">
+        <span class="tab-dot" style="background:var(--cat-basics-h)"></span>
+        사전·기초
+      </a>
+      <a href="#core" class="course-tab active-core">
+        <span class="tab-dot" style="background:var(--cat-core-h)"></span>
+        핵심 서비스
+      </a>
+      <a href="#ops" class="course-tab active-ops">
+        <span class="tab-dot" style="background:var(--cat-ops-h)"></span>
+        운영·자동화
+      </a>
+      <a href="#advanced" class="course-tab active-adv">
+        <span class="tab-dot" style="background:var(--cat-adv-h)"></span>
+        실전·심화
+      </a>
+    </nav>
+  </div>
+</section>
 
-  <a class="ch-card" href="/chapters/ch02/">
-    <div class="num">02</div>
-    <div class="info">
-      <div class="title">Amazon EC2</div>
-      <div class="svc">EC2 · EBS · AMI · 보안 그룹 · 탄력적 IP · ENI</div>
-    </div>
-    <div class="tags"><span class="tag stage">핵심 서비스</span><span class="tag warn">시간당 과금</span></div>
-  </a>
+<!-- ── Chapter List ─────────────────────────────────────── -->
+<main class="main-content">
+  <div class="container">
 
-  <a class="ch-card" href="/chapters/ch03/">
-    <div class="num">03</div>
-    <div class="info">
-      <div class="title">Amazon VPC</div>
-      <div class="svc">VPC · 서브넷 · 라우팅 · IGW · NAT · NACL · Bastion Host</div>
-    </div>
-    <div class="tags"><span class="tag stage">핵심 서비스</span><span class="tag warn">NAT 과금</span></div>
-  </a>
+    <!-- 사전·기초 -->
+    <section class="category-section" id="basics">
+      <div class="category-header">
+        <span class="category-badge cat-badge-basics">사전·기초</span>
+        <span class="category-range">CH 00–01</span>
+        <span class="category-desc">AWS 시작 전 필수 사전 지식과 기본 개념</span>
+      </div>
+      <div class="chapter-grid">
 
-  <a class="ch-card" href="/chapters/ch04/">
-    <div class="num">04</div>
-    <div class="info">
-      <div class="title">ELB · Auto Scaling</div>
-      <div class="svc">ALB · NLB · ASG · 헬스 체크 · 스케일링 정책</div>
-    </div>
-    <div class="tags"><span class="tag stage">핵심 서비스</span><span class="tag warn">시간당 과금</span></div>
-  </a>
+        <a href="chapters/ch00/" class="chapter-card" data-chapter-id="ch00">
+          <div class="card-header card-header-basics">
+            <div>
+              <div class="chapter-prefix">CHAPTER</div>
+              <div class="chapter-num-display">00</div>
+            </div>
+            <div class="chapter-check-badge">✓</div>
+          </div>
+          <div class="card-body">
+            <div class="card-tags">
+              <span class="tag tag-cat-basics">사전·기초</span>
+              <span class="tag tag-free">과금 없음</span>
+            </div>
+            <h3 class="card-title">사전 지식</h3>
+            <p class="card-subtitle">네트워크·보안 기초</p>
+            <p class="card-services">OSI 7 Layer · DNS · 캐싱 · 암호화 · RDBMS vs NoSQL</p>
+          </div>
+          <div class="card-footer">
+            <span class="card-meta">읽기 전용</span>
+            <span class="card-arrow">→</span>
+          </div>
+        </a>
 
-  <a class="ch-card" href="/chapters/ch05/">
-    <div class="num">05</div>
-    <div class="info">
-      <div class="title">Amazon S3</div>
-      <div class="svc">S3 · 스토리지 클래스 · 버전 관리 · 암호화 · 정적 호스팅</div>
-    </div>
-    <div class="tags"><span class="tag stage">핵심 서비스</span><span class="tag safe">상시 무료 5GB</span></div>
-  </a>
+        <a href="chapters/ch01/" class="chapter-card" data-chapter-id="ch01">
+          <div class="card-header card-header-basics">
+            <div>
+              <div class="chapter-prefix">CHAPTER</div>
+              <div class="chapter-num-display">01</div>
+            </div>
+            <div class="chapter-check-badge">✓</div>
+          </div>
+          <div class="card-body">
+            <div class="card-tags">
+              <span class="tag tag-cat-basics">사전·기초</span>
+              <span class="tag tag-free">과금 없음</span>
+            </div>
+            <h3 class="card-title">AWS 기초 개념</h3>
+            <p class="card-subtitle">AWS의 전체 구조 이해</p>
+            <p class="card-services">클라우드 · 가상화 · AWS 구조 · 계정 · IAM</p>
+          </div>
+          <div class="card-footer">
+            <span class="card-meta">읽기 전용</span>
+            <span class="card-arrow">→</span>
+          </div>
+        </a>
 
-  <a class="ch-card" href="/chapters/ch06/">
-    <div class="num">06</div>
-    <div class="info">
-      <div class="title">Amazon RDS</div>
-      <div class="svc">RDS · Aurora · Aurora Serverless · RDS Proxy · Secrets Manager</div>
-    </div>
-    <div class="tags"><span class="tag stage">핵심 서비스</span><span class="tag warn">⚠ 과금 위험</span></div>
-  </a>
+      </div>
+    </section>
 
-  <a class="ch-card" href="/chapters/ch07/">
-    <div class="num">07</div>
-    <div class="info">
-      <div class="title">Route 53 · CloudFront</div>
-      <div class="svc">Route 53 · DNS · Routing Policy · CloudFront · ACM · OAC</div>
-    </div>
-    <div class="tags"><span class="tag stage">핵심 서비스</span><span class="tag warn">호스팅 영역 $0.5</span></div>
-  </a>
+    <!-- 핵심 서비스 -->
+    <section class="category-section" id="core">
+      <div class="category-header">
+        <span class="category-badge cat-badge-core">핵심 서비스</span>
+        <span class="category-range">CH 02–07</span>
+        <span class="category-desc">컴퓨팅·네트워크·스토리지·데이터베이스 핵심 서비스</span>
+      </div>
+      <div class="chapter-grid">
 
-  <p class="toc-stage-label">운영·자동화</p>
+        <a href="chapters/ch02/" class="chapter-card" data-chapter-id="ch02">
+          <div class="card-header card-header-core">
+            <div>
+              <div class="chapter-prefix">CHAPTER</div>
+              <div class="chapter-num-display">02</div>
+            </div>
+            <div class="chapter-check-badge">✓</div>
+          </div>
+          <div class="card-body">
+            <div class="card-tags">
+              <span class="tag tag-cat-core">핵심 서비스</span>
+              <span class="tag tag-billing">시간당 과금</span>
+            </div>
+            <h3 class="card-title">Amazon EC2</h3>
+            <p class="card-subtitle">가상 서버 완전 정복</p>
+            <p class="card-services">EC2 · EBS · AMI · 보안 그룹 · 탄력적 IP · ENI</p>
+          </div>
+          <div class="card-footer">
+            <span class="card-meta">실습 포함</span>
+            <span class="card-arrow">→</span>
+          </div>
+        </a>
 
-  <a class="ch-card" href="/chapters/ch08/">
-    <div class="num">08</div>
-    <div class="info">
-      <div class="title">CloudWatch · 모니터링</div>
-      <div class="svc">CloudWatch · 지표 · 로그 · 경보 · 대시보드 · CloudTrail</div>
-    </div>
-    <div class="tags"><span class="tag stage">운영·자동화</span><span class="tag safe">기본 무료</span></div>
-  </a>
+        <a href="chapters/ch03/" class="chapter-card" data-chapter-id="ch03">
+          <div class="card-header card-header-core">
+            <div>
+              <div class="chapter-prefix">CHAPTER</div>
+              <div class="chapter-num-display">03</div>
+            </div>
+            <div class="chapter-check-badge">✓</div>
+          </div>
+          <div class="card-body">
+            <div class="card-tags">
+              <span class="tag tag-cat-core">핵심 서비스</span>
+              <span class="tag tag-billing">NAT 과금</span>
+            </div>
+            <h3 class="card-title">Amazon VPC</h3>
+            <p class="card-subtitle">가상 네트워크 설계</p>
+            <p class="card-services">VPC · 서브넷 · 라우팅 · IGW · NAT · NACL · Bastion Host</p>
+          </div>
+          <div class="card-footer">
+            <span class="card-meta">실습 포함</span>
+            <span class="card-arrow">→</span>
+          </div>
+        </a>
 
-  <a class="ch-card" href="/chapters/ch09/">
-    <div class="num">09</div>
-    <div class="info">
-      <div class="title">CI/CD 자동화</div>
-      <div class="svc">CodePipeline · CodeBuild · CodeDeploy · Systems Manager</div>
-    </div>
-    <div class="tags"><span class="tag stage">운영·자동화</span></div>
-  </a>
+        <a href="chapters/ch04/" class="chapter-card" data-chapter-id="ch04">
+          <div class="card-header card-header-core">
+            <div>
+              <div class="chapter-prefix">CHAPTER</div>
+              <div class="chapter-num-display">04</div>
+            </div>
+            <div class="chapter-check-badge">✓</div>
+          </div>
+          <div class="card-body">
+            <div class="card-tags">
+              <span class="tag tag-cat-core">핵심 서비스</span>
+              <span class="tag tag-billing">시간당 과금</span>
+            </div>
+            <h3 class="card-title">ELB · Auto Scaling</h3>
+            <p class="card-subtitle">고가용성과 자동 확장</p>
+            <p class="card-services">ALB · NLB · ASG · 헬스 체크 · 스케일링 정책</p>
+          </div>
+          <div class="card-footer">
+            <span class="card-meta">실습 포함</span>
+            <span class="card-arrow">→</span>
+          </div>
+        </a>
 
-  <p class="toc-stage-label">실전·심화</p>
+        <a href="chapters/ch05/" class="chapter-card" data-chapter-id="ch05">
+          <div class="card-header card-header-core">
+            <div>
+              <div class="chapter-prefix">CHAPTER</div>
+              <div class="chapter-num-display">05</div>
+            </div>
+            <div class="chapter-check-badge">✓</div>
+          </div>
+          <div class="card-body">
+            <div class="card-tags">
+              <span class="tag tag-cat-core">핵심 서비스</span>
+              <span class="tag tag-free">상시 무료 5GB</span>
+            </div>
+            <h3 class="card-title">Amazon S3</h3>
+            <p class="card-subtitle">클라우드 오브젝트 스토리지</p>
+            <p class="card-services">S3 · 스토리지 클래스 · 버전 관리 · 암호화 · 정적 호스팅</p>
+          </div>
+          <div class="card-footer">
+            <span class="card-meta">실습 포함</span>
+            <span class="card-arrow">→</span>
+          </div>
+        </a>
 
-  <a class="ch-card" href="/chapters/ch10/">
-    <div class="num">10</div>
-    <div class="info">
-      <div class="title">종합 실습 — 실전 아키텍처</div>
-      <div class="svc">EC2 · ALB · ASG · RDS · S3 · CloudFront · Route 53 · CI/CD</div>
-    </div>
-    <div class="tags"><span class="tag stage">실전·심화</span><span class="tag warn">⚠ 당일 정리 필수</span><span class="tag rail">최종 목표</span></div>
-  </a>
+        <a href="chapters/ch06/" class="chapter-card" data-chapter-id="ch06">
+          <div class="card-header card-header-core">
+            <div>
+              <div class="chapter-prefix">CHAPTER</div>
+              <div class="chapter-num-display">06</div>
+            </div>
+            <div class="chapter-check-badge">✓</div>
+          </div>
+          <div class="card-body">
+            <div class="card-tags">
+              <span class="tag tag-cat-core">핵심 서비스</span>
+              <span class="tag tag-danger">⚠ 과금 위험</span>
+            </div>
+            <h3 class="card-title">Amazon RDS</h3>
+            <p class="card-subtitle">관리형 관계형 데이터베이스</p>
+            <p class="card-services">RDS · Aurora · Aurora Serverless · RDS Proxy · Secrets Manager</p>
+          </div>
+          <div class="card-footer">
+            <span class="card-meta">실습 포함</span>
+            <span class="card-arrow">→</span>
+          </div>
+        </a>
 
-  <a class="ch-card" href="/chapters/ch11/">
-    <div class="num">11</div>
-    <div class="info">
-      <div class="title">비용 관리</div>
-      <div class="svc">Billing · Budgets · Cost Explorer · Trusted Advisor</div>
-    </div>
-    <div class="tags"><span class="tag stage">실전·심화</span><span class="tag safe">과금 없음</span></div>
-  </a>
+        <a href="chapters/ch07/" class="chapter-card" data-chapter-id="ch07">
+          <div class="card-header card-header-core">
+            <div>
+              <div class="chapter-prefix">CHAPTER</div>
+              <div class="chapter-num-display">07</div>
+            </div>
+            <div class="chapter-check-badge">✓</div>
+          </div>
+          <div class="card-body">
+            <div class="card-tags">
+              <span class="tag tag-cat-core">핵심 서비스</span>
+              <span class="tag tag-billing">호스팅 영역 $0.5</span>
+            </div>
+            <h3 class="card-title">Route 53 · CloudFront</h3>
+            <p class="card-subtitle">DNS와 CDN 서비스</p>
+            <p class="card-services">Route 53 · DNS · Routing Policy · CloudFront · ACM · OAC</p>
+          </div>
+          <div class="card-footer">
+            <span class="card-meta">실습 포함</span>
+            <span class="card-arrow">→</span>
+          </div>
+        </a>
 
-</div><!-- /toc -->
+      </div>
+    </section>
 
-<footer>
-  <p>AWS 강의실 기초 강의 + 인프런 배포 강의를 합쳐 재편했습니다. Spring Boot 기준. 비학습 항목 및 기업 계정 관리 항목 제외.</p>
+    <!-- 운영·자동화 -->
+    <section class="category-section" id="ops">
+      <div class="category-header">
+        <span class="category-badge cat-badge-ops">운영·자동화</span>
+        <span class="category-range">CH 08–09</span>
+        <span class="category-desc">운영 모니터링과 CI/CD 배포 파이프라인</span>
+      </div>
+      <div class="chapter-grid">
+
+        <a href="chapters/ch08/" class="chapter-card" data-chapter-id="ch08">
+          <div class="card-header card-header-ops">
+            <div>
+              <div class="chapter-prefix">CHAPTER</div>
+              <div class="chapter-num-display">08</div>
+            </div>
+            <div class="chapter-check-badge">✓</div>
+          </div>
+          <div class="card-body">
+            <div class="card-tags">
+              <span class="tag tag-cat-ops">운영·자동화</span>
+              <span class="tag tag-free">기본 무료</span>
+            </div>
+            <h3 class="card-title">CloudWatch · 모니터링</h3>
+            <p class="card-subtitle">운영 환경 가시성 확보</p>
+            <p class="card-services">CloudWatch · 지표 · 로그 · 경보 · 대시보드 · CloudTrail</p>
+          </div>
+          <div class="card-footer">
+            <span class="card-meta">실습 포함</span>
+            <span class="card-arrow">→</span>
+          </div>
+        </a>
+
+        <a href="chapters/ch09/" class="chapter-card" data-chapter-id="ch09">
+          <div class="card-header card-header-ops">
+            <div>
+              <div class="chapter-prefix">CHAPTER</div>
+              <div class="chapter-num-display">09</div>
+            </div>
+            <div class="chapter-check-badge">✓</div>
+          </div>
+          <div class="card-body">
+            <div class="card-tags">
+              <span class="tag tag-cat-ops">운영·자동화</span>
+            </div>
+            <h3 class="card-title">CI/CD 자동화</h3>
+            <p class="card-subtitle">배포 파이프라인 구축</p>
+            <p class="card-services">CodePipeline · CodeBuild · CodeDeploy · Systems Manager</p>
+          </div>
+          <div class="card-footer">
+            <span class="card-meta">실습 포함</span>
+            <span class="card-arrow">→</span>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- 실전·심화 -->
+    <section class="category-section" id="advanced">
+      <div class="category-header">
+        <span class="category-badge cat-badge-adv">실전·심화</span>
+        <span class="category-range">CH 10–11</span>
+        <span class="category-desc">실전 아키텍처 종합 실습과 비용 최적화</span>
+      </div>
+      <div class="chapter-grid">
+
+        <a href="chapters/ch10/" class="chapter-card" data-chapter-id="ch10">
+          <div class="card-header card-header-adv">
+            <div>
+              <div class="chapter-prefix">CHAPTER</div>
+              <div class="chapter-num-display">10</div>
+            </div>
+            <div class="chapter-check-badge">✓</div>
+          </div>
+          <div class="card-body">
+            <div class="card-tags">
+              <span class="tag tag-cat-adv">실전·심화</span>
+              <span class="tag tag-danger">⚠ 당일 정리 필수</span>
+            </div>
+            <h3 class="card-title">종합 실습 — 실전 아키텍처</h3>
+            <p class="card-subtitle">최종 목표 달성</p>
+            <p class="card-services">EC2 · ALB · ASG · RDS · S3 · CloudFront · Route 53 · CI/CD</p>
+          </div>
+          <div class="card-footer">
+            <span class="card-meta">최종 실습</span>
+            <span class="card-arrow">→</span>
+          </div>
+        </a>
+
+        <a href="chapters/ch11/" class="chapter-card" data-chapter-id="ch11">
+          <div class="card-header card-header-adv">
+            <div>
+              <div class="chapter-prefix">CHAPTER</div>
+              <div class="chapter-num-display">11</div>
+            </div>
+            <div class="chapter-check-badge">✓</div>
+          </div>
+          <div class="card-body">
+            <div class="card-tags">
+              <span class="tag tag-cat-adv">실전·심화</span>
+              <span class="tag tag-free">과금 없음</span>
+            </div>
+            <h3 class="card-title">비용 관리</h3>
+            <p class="card-subtitle">AWS 요금 최적화</p>
+            <p class="card-services">Billing · Budgets · Cost Explorer · Trusted Advisor</p>
+          </div>
+          <div class="card-footer">
+            <span class="card-meta">읽기 전용</span>
+            <span class="card-arrow">→</span>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- ── Footer ───────────────────────────────────────────── -->
+<footer class="site-footer">
+  <div class="container">
+    <p>AWS 완전 정복 가이드 · Spring Boot 기준<br>AWS 강의실 기초 강의 + 인프런 배포 강의 통합 재편 · 비학습 항목 및 기업 계정 관리 항목 제외</p>
+  </div>
 </footer>
 
-</div><!-- /wrap -->
+<script src="assets/nav.js"></script>
 </body>
 </html>

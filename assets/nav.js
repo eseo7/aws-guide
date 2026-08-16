@@ -1,94 +1,120 @@
-/* ================================================
-   AWS Guide — 공통 네비게이션
-   ================================================ */
+/* ─── AWS Guide Nav & Progress ───────────────────────────── */
+(function () {
+  var STORAGE_KEY = 'aws-guide-completed';
+  var TOTAL = 12;
 
-const CHAPTERS = [
-  { num: '00', title: '사전 지식 — 네트워크·보안 기초', path: '/chapters/ch00/' },
-  { num: '01', title: 'AWS 기초 개념',                  path: '/chapters/ch01/' },
-  { num: '02', title: 'Amazon EC2',                      path: '/chapters/ch02/' },
-  { num: '03', title: 'Amazon VPC',                      path: '/chapters/ch03/' },
-  { num: '04', title: 'ELB · Auto Scaling',              path: '/chapters/ch04/' },
-  { num: '05', title: 'Amazon S3',                       path: '/chapters/ch05/' },
-  { num: '06', title: 'Amazon RDS',                      path: '/chapters/ch06/' },
-  { num: '07', title: 'Route 53 · CloudFront',           path: '/chapters/ch07/' },
-  { num: '08', title: 'CloudWatch · 모니터링',           path: '/chapters/ch08/' },
-  { num: '09', title: 'CI/CD 자동화',                    path: '/chapters/ch09/' },
-  { num: '10', title: '종합 실습 — 실전 아키텍처',       path: '/chapters/ch10/' },
-  { num: '11', title: '비용 관리',                       path: '/chapters/ch11/' },
-];
-
-/* 현재 챕터 번호를 URL에서 감지 */
-function currentChapterIndex() {
-  const path = window.location.pathname;
-  return CHAPTERS.findIndex(ch => path.includes(ch.path.replace(/\/$/, '')));
-}
-
-/* 이전/다음 버튼 렌더링 */
-function renderChapterNav() {
-  const container = document.getElementById('ch-nav');
-  if (!container) return;
-
-  const idx = currentChapterIndex();
-  const prev = idx > 0 ? CHAPTERS[idx - 1] : null;
-  const next = idx < CHAPTERS.length - 1 ? CHAPTERS[idx + 1] : null;
-
-  container.innerHTML = `
-    ${prev
-      ? `<a href="${prev.path}" class="ch-nav-btn prev">
-           <span class="dir">← 이전 챕터</span>
-           <span class="title">CH${prev.num} ${prev.title}</span>
-         </a>`
-      : `<span class="ch-nav-btn disabled prev">
-           <span class="dir">← 이전 챕터</span>
-           <span class="title">처음입니다</span>
-         </span>`
-    }
-    <a href="/" class="ch-nav-btn" style="align-items:center">
-      <span class="dir" style="text-align:center">목차</span>
-      <span class="title" style="font-family:var(--mono);font-size:12px">aws-guide</span>
-    </a>
-    ${next
-      ? `<a href="${next.path}" class="ch-nav-btn next">
-           <span class="dir">다음 챕터 →</span>
-           <span class="title">CH${next.num} ${next.title}</span>
-         </a>`
-      : `<span class="ch-nav-btn disabled next">
-           <span class="dir">다음 챕터 →</span>
-           <span class="title">마지막입니다</span>
-         </span>`
-    }
-  `;
-}
-
-/* 스크롤 진행 표시줄 */
-function initProgressBar() {
-  const fill = document.getElementById('progress-fill');
-  if (!fill) return;
-  function update() {
-    const total = document.documentElement.scrollHeight - window.innerHeight;
-    const pct = total > 0 ? (window.scrollY / total) * 100 : 0;
-    fill.style.width = pct + '%';
+  function getCompleted() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch (e) { return []; }
   }
-  window.addEventListener('scroll', update, { passive: true });
-  update();
-}
 
-/* 체크리스트 상태 — sessionStorage (탭 닫으면 초기화) */
-function initChecklists() {
-  const key = 'checklist_' + window.location.pathname;
-  const saved = JSON.parse(sessionStorage.getItem(key) || '{}');
+  function saveCompleted(arr) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  }
 
-  document.querySelectorAll('.checklist input[type=checkbox]').forEach((el, i) => {
-    if (saved[i]) el.checked = true;
-    el.addEventListener('change', () => {
-      saved[i] = el.checked;
-      sessionStorage.setItem(key, JSON.stringify(saved));
+  function toggleChapter(id) {
+    var list = getCompleted();
+    var idx = list.indexOf(id);
+    if (idx === -1) list.push(id);
+    else list.splice(idx, 1);
+    saveCompleted(list);
+    return list;
+  }
+
+  /* ── Update all progress UI ─────────────────────────── */
+  function renderProgress(completed) {
+    var done = completed.length;
+    var pct = Math.round((done / TOTAL) * 100);
+
+    /* Hero progress bar */
+    var fill = document.querySelector('.progress-fill');
+    var label = document.querySelector('.progress-label');
+    if (fill) fill.style.width = pct + '%';
+    if (label) label.textContent = done + ' / ' + TOTAL + ' 챕터';
+
+    /* Header mini bar */
+    var hFill = document.querySelector('.header-prog-fill');
+    var hLabel = document.querySelector('.header-prog-label');
+    if (hFill) hFill.style.width = pct + '%';
+    if (hLabel) hLabel.textContent = pct + '%';
+
+    /* Card completed states */
+    document.querySelectorAll('[data-chapter-id]').forEach(function (card) {
+      var chId = card.dataset.chapterId;
+      var badge = card.querySelector('.chapter-check-badge');
+      if (completed.indexOf(chId) !== -1) {
+        card.classList.add('is-completed');
+        if (badge) badge.style.display = 'flex';
+      } else {
+        card.classList.remove('is-completed');
+        if (badge) badge.style.display = 'none';
+      }
     });
-  });
-}
+  }
 
-document.addEventListener('DOMContentLoaded', () => {
-  renderChapterNav();
-  initProgressBar();
-  initChecklists();
-});
+  /* ── Chapter complete button ────────────────────────── */
+  function initCompleteBtn() {
+    var btn = document.querySelector('.complete-btn[data-chapter]');
+    if (!btn) return;
+    var chId = btn.dataset.chapter;
+
+    function syncBtn(completed) {
+      if (completed.indexOf(chId) !== -1) {
+        btn.textContent = '✓ 완료됨';
+        btn.classList.add('is-completed');
+      } else {
+        btn.textContent = '완료로 표시';
+        btn.classList.remove('is-completed');
+      }
+    }
+
+    syncBtn(getCompleted());
+
+    btn.addEventListener('click', function () {
+      var updated = toggleChapter(chId);
+      syncBtn(updated);
+      renderProgress(updated);
+    });
+  }
+
+  /* ── TOC active highlight ────────────────────────────── */
+  function initToc() {
+    var sections = document.querySelectorAll('.content-section[id]');
+    var tocLinks = document.querySelectorAll('.toc-link');
+    if (!sections.length || !tocLinks.length) return;
+
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var id = entry.target.id;
+        tocLinks.forEach(function (link) {
+          var active = link.getAttribute('href') === '#' + id;
+          link.classList.toggle('is-active', active);
+        });
+      });
+    }, { rootMargin: '-10% 0% -70% 0%' });
+
+    sections.forEach(function (s) { observer.observe(s); });
+  }
+
+  /* ── Back-to-top ────────────────────────────────────── */
+  function initBackToTop() {
+    var btn = document.querySelector('.back-to-top');
+    if (!btn) return;
+    window.addEventListener('scroll', function () {
+      btn.style.opacity = window.scrollY > 400 ? '1' : '0';
+      btn.style.pointerEvents = window.scrollY > 400 ? 'auto' : 'none';
+    });
+    btn.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  /* ── Init ───────────────────────────────────────────── */
+  document.addEventListener('DOMContentLoaded', function () {
+    renderProgress(getCompleted());
+    initCompleteBtn();
+    initToc();
+    initBackToTop();
+  });
+})();
