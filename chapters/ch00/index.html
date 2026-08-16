@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CH00 — 사전 지식 · AWS 완전 정복 가이드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav-in">
+    <a href="/" class="topnav-home">aws-guide</a>
+    <span class="topnav-sep">/</span>
+    <span class="topnav-current">CH00 · 사전 지식</span>
+    <div class="topnav-progress">
+      <div class="topnav-fill" id="progress-fill"></div>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<!-- ── Hero ── -->
+<header class="ch-hero">
+  <p class="ch-eyebrow">Chapter 00 · 사전·기초 단계</p>
+  <div class="ch-num">00</div>
+  <h1>사전 지식<br>네트워크·보안 기초</h1>
+  <p class="svc">OSI 7 Layer · DNS · 캐싱 · 암호화/SSL · RDBMS vs NoSQL</p>
+  <div class="ch-tags">
+    <span class="tag stage">사전·기초</span>
+    <span class="tag safe">과금 없음</span>
+    <span class="tag">읽기 전용</span>
+  </div>
+</header>
+
+<!-- ── 들어가며 ── -->
+<div class="section">
+  <p class="section-label">들어가며</p>
+  <p>AWS 콘솔에서 "보안 그룹에서 인바운드 규칙을 추가하세요", "서브넷이 퍼블릭인지 확인하세요", "TLS 1.2 이상을 사용하세요" 같은 말이 들릴 때 감이 안 잡히는 이유는 AWS를 몰라서가 아닙니다. AWS가 다루는 개념들의 토대인 <strong>네트워크 기초를 건너뛰었기 때문</strong>입니다.</p>
+  <p>이 챕터는 AWS를 시작하기 전에 반드시 알아야 할 개념들을 다룹니다. 읽기만 해도 되고, 실습은 없습니다. 개념이 잡히면 이후 챕터의 모든 설정이 "왜 이렇게 하는지"와 함께 이해됩니다.</p>
+
+  <div class="callout info">
+    <span class="callout-label">이 챕터를 마치면</span>
+    <p>"보안 그룹이 22번 포트를 막았다"는 말이 들립니다. "HTTPS는 TLS 핸드셰이크로 암호화된다"는 말이 이해됩니다. "서브넷이 퍼블릭이냐 프라이빗이냐"의 차이가 보입니다.</p>
+  </div>
+</div>
+
+<!-- ── OSI 7 Layer ── -->
+<div class="section">
+  <p class="section-label">OSI 7 Layer</p>
+
+  <h2>네트워크는 왜 7계층으로 나뉘는가</h2>
+  <p>컴퓨터끼리 데이터를 주고받는 일은 복잡합니다. 케이블을 통해 전기 신호를 보내는 물리적 문제부터, IP 주소로 경로를 찾는 문제, 데이터를 빠짐없이 전달하는 문제, 애플리케이션이 데이터를 해석하는 문제까지 여러 층의 문제가 쌓여 있습니다.</p>
+  <p>OSI 모델은 이 복잡성을 <strong>7개의 층(Layer)으로 나눠 각 층이 자기 역할만 담당하게</strong> 만든 설계 원칙입니다. 각 층은 바로 아래 층의 서비스를 사용하고, 바로 위 층에 서비스를 제공합니다.</p>
+
+  <div class="diagram">
+    <svg width="100%" viewBox="0 0 680 420" role="img" xmlns="http://www.w3.org/2000/svg">
+      <title>OSI 7계층 모델</title>
+      <desc>7계층부터 1계층까지 각 계층의 이름, 역할, 대표 프로토콜을 보여주는 다이어그램</desc>
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <!-- Layer bars -->
+      <!-- L7 Application -->
+      <g class="c-purple">
+        <rect x="40" y="20" width="400" height="44" rx="4" stroke-width="0.5"/>
+        <text class="th" x="60" y="42" dominant-baseline="central">7 · Application</text>
+        <text class="ts" x="60" y="58" dominant-baseline="central">HTTP · HTTPS · DNS · SMTP</text>
+      </g>
+      <!-- L6 Presentation -->
+      <g class="c-purple">
+        <rect x="40" y="70" width="400" height="44" rx="4" stroke-width="0.5"/>
+        <text class="th" x="60" y="92" dominant-baseline="central">6 · Presentation</text>
+        <text class="ts" x="60" y="108" dominant-baseline="central">암호화 · 압축 · 인코딩 (SSL/TLS)</text>
+      </g>
+      <!-- L5 Session -->
+      <g class="c-purple">
+        <rect x="40" y="120" width="400" height="44" rx="4" stroke-width="0.5"/>
+        <text class="th" x="60" y="142" dominant-baseline="central">5 · Session</text>
+        <text class="ts" x="60" y="158" dominant-baseline="central">세션 수립 · 유지 · 종료</text>
+      </g>
+      <!-- L4 Transport -->
+      <g class="c-teal">
+        <rect x="40" y="170" width="400" height="44" rx="4" stroke-width="0.5"/>
+        <text class="th" x="60" y="192" dominant-baseline="central">4 · Transport</text>
+        <text class="ts" x="60" y="208" dominant-baseline="central">TCP · UDP · 포트 번호</text>
+      </g>
+      <!-- L3 Network -->
+      <g class="c-blue">
+        <rect x="40" y="220" width="400" height="44" rx="4" stroke-width="0.5"/>
+        <text class="th" x="60" y="242" dominant-baseline="central">3 · Network</text>
+        <text class="ts" x="60" y="258" dominant-baseline="central">IP · 라우터 · 경로 결정</text>
+      </g>
+      <!-- L2 Data Link -->
+      <g class="c-amber">
+        <rect x="40" y="270" width="400" height="44" rx="4" stroke-width="0.5"/>
+        <text class="th" x="60" y="292" dominant-baseline="central">2 · Data Link</text>
+        <text class="ts" x="60" y="308" dominant-baseline="central">MAC 주소 · 스위치 · 이더넷</text>
+      </g>
+      <!-- L1 Physical -->
+      <g class="c-gray">
+        <rect x="40" y="320" width="400" height="44" rx="4" stroke-width="0.5"/>
+        <text class="th" x="60" y="342" dominant-baseline="central">1 · Physical</text>
+        <text class="ts" x="60" y="358" dominant-baseline="central">케이블 · 전기 신호 · 광신호</text>
+      </g>
+
+      <!-- AWS 관련 표시 -->
+      <text class="ts" x="460" y="32" dominant-baseline="central" style="fill:#6E706C">AWS 연관</text>
+      <text class="ts" x="460" y="55" dominant-baseline="central" style="fill:#4A3A7A">Route 53, ALB, CloudFront</text>
+      <text class="ts" x="460" y="105" dominant-baseline="central" style="fill:#4A3A7A">ACM 인증서</text>
+      <text class="ts" x="460" y="192" dominant-baseline="central" style="fill:#1A5F5A">보안 그룹 (포트 기반)</text>
+      <text class="ts" x="460" y="242" dominant-baseline="central" style="fill:#23405A">VPC, 서브넷, 라우팅</text>
+      <text class="ts" x="460" y="342" dominant-baseline="central" style="fill:#6E706C">Direct Connect</text>
+
+      <!-- 화살표 -->
+      <line x1="240" y1="368" x2="240" y2="400" stroke="#DCDAD2" stroke-width="1" marker-end="url(#arr)"/>
+      <text class="ts" x="340" y="386" dominant-baseline="central" style="fill:#6E706C">데이터 전송 방향 (송신)</text>
+    </svg>
+    <p class="diagram-caption">OSI 7계층과 AWS 서비스 매핑. 보안 그룹은 L4(포트)에서 동작하고, VPC는 L3(IP)에서 동작합니다.</p>
+  </div>
+
+  <h3>AWS에서 자주 나오는 계층</h3>
+  <table>
+    <tr><th>계층</th><th>AWS에서 나오는 상황</th></tr>
+    <tr><td class="mono">L7 Application</td><td>ALB가 HTTP 헤더·경로를 보고 라우팅 결정</td></tr>
+    <tr><td class="mono">L6 Presentation</td><td>ACM 인증서로 TLS 암호화/복호화</td></tr>
+    <tr><td class="mono">L4 Transport</td><td>보안 그룹 인바운드 규칙에서 포트 22, 80, 443 지정</td></tr>
+    <tr><td class="mono">L3 Network</td><td>VPC 서브넷 CIDR, 라우팅 테이블, IP 지정</td></tr>
+    <tr><td class="mono">L2 Data Link</td><td>ENI(탄력적 네트워크 인터페이스)의 MAC 주소</td></tr>
+  </table>
+
+  <h3>TCP와 UDP — 왜 둘 다 있는가</h3>
+  <p>L4(Transport)에는 TCP와 UDP 두 가지 프로토콜이 있습니다.</p>
+  <table>
+    <tr><th>구분</th><th>TCP</th><th>UDP</th></tr>
+    <tr><td>연결 방식</td><td>연결 수립 후 통신 (3-way handshake)</td><td>연결 없이 바로 전송</td></tr>
+    <tr><td>신뢰성</td><td>순서 보장, 재전송 있음</td><td>순서 보장 없음, 재전송 없음</td></tr>
+    <tr><td>속도</td><td>상대적으로 느림</td><td>빠름</td></tr>
+    <tr><td>사용처</td><td>HTTP, HTTPS, SSH, DB 연결</td><td>DNS, 영상 스트리밍, 게임</td></tr>
+  </table>
+  <p>AWS 보안 그룹에서 "프로토콜: TCP, 포트: 22"처럼 지정하는 이유가 여기 있습니다. SSH는 TCP를 씁니다. DNS는 UDP 53번을 씁니다.</p>
+
+  <h3>포트 번호 — 반드시 외워야 하는 것들</h3>
+  <table>
+    <tr><th>포트</th><th>프로토콜</th><th>AWS에서의 용도</th></tr>
+    <tr><td class="mono">22</td><td>SSH</td><td>EC2 원격 접속</td></tr>
+    <tr><td class="mono">80</td><td>HTTP</td><td>웹 서버, ALB 리스너</td></tr>
+    <tr><td class="mono">443</td><td>HTTPS</td><td>웹 서버(암호화), ALB 리스너</td></tr>
+    <tr><td class="mono">3306</td><td>MySQL</td><td>RDS MySQL 접속</td></tr>
+    <tr><td class="mono">5432</td><td>PostgreSQL</td><td>RDS PostgreSQL 접속</td></tr>
+    <tr><td class="mono">8080</td><td>HTTP (대체)</td><td>Spring Boot 기본 포트</td></tr>
+    <tr><td class="mono">53</td><td>DNS</td><td>Route 53</td></tr>
+  </table>
+</div>
+
+<!-- ── DNS ── -->
+<div class="section">
+  <p class="section-label">DNS</p>
+
+  <h2>DNS — 이름을 IP로 바꾸는 전화번호부</h2>
+  <p>브라우저에 <code>www.parnas.co.kr</code>을 입력하면 실제로는 <code>52.78.XXX.XXX</code> 같은 IP 주소로 연결됩니다. 사람은 이름을 기억하지만 컴퓨터는 IP 주소로 통신하기 때문입니다. DNS(Domain Name System)는 이 변환을 담당합니다.</p>
+
+  <div class="diagram">
+    <svg width="100%" viewBox="0 0 680 260" role="img" xmlns="http://www.w3.org/2000/svg">
+      <title>DNS 조회 흐름</title>
+      <desc>브라우저가 도메인을 입력받아 DNS 서버를 거쳐 IP를 얻고 서버에 접속하는 과정</desc>
+      <defs>
+        <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <!-- Browser -->
+      <g class="c-gray">
+        <rect x="20" y="80" width="120" height="56" rx="8" stroke-width="0.5"/>
+        <text class="th" x="80" y="104" text-anchor="middle" dominant-baseline="central">브라우저</text>
+        <text class="ts" x="80" y="122" text-anchor="middle" dominant-baseline="central">parnas.co.kr 입력</text>
+      </g>
+
+      <!-- DNS Resolver -->
+      <g class="c-blue">
+        <rect x="200" y="80" width="130" height="56" rx="8" stroke-width="0.5"/>
+        <text class="th" x="265" y="101" text-anchor="middle" dominant-baseline="central">DNS Resolver</text>
+        <text class="ts" x="265" y="119" text-anchor="middle" dominant-baseline="central">통신사 DNS 서버</text>
+        <text class="ts" x="265" y="133" text-anchor="middle" dominant-baseline="central">(캐시 확인)</text>
+      </g>
+
+      <!-- Route 53 -->
+      <g class="c-teal">
+        <rect x="390" y="80" width="130" height="56" rx="8" stroke-width="0.5"/>
+        <text class="th" x="455" y="101" text-anchor="middle" dominant-baseline="central">Route 53</text>
+        <text class="ts" x="455" y="119" text-anchor="middle" dominant-baseline="central">AWS 권한 DNS</text>
+        <text class="ts" x="455" y="133" text-anchor="middle" dominant-baseline="central">A 레코드 반환</text>
+      </g>
+
+      <!-- Server -->
+      <g class="c-purple">
+        <rect x="580" y="80" width="80" height="56" rx="8" stroke-width="0.5"/>
+        <text class="th" x="620" y="101" text-anchor="middle" dominant-baseline="central">서버</text>
+        <text class="ts" x="620" y="119" text-anchor="middle" dominant-baseline="central">52.78.X.X</text>
+        <text class="ts" x="620" y="133" text-anchor="middle" dominant-baseline="central">(EC2/ALB)</text>
+      </g>
+
+      <!-- Arrows -->
+      <line x1="142" y1="105" x2="198" y2="105" stroke="#888780" stroke-width="1" marker-end="url(#arr2)"/>
+      <text class="ts" x="170" y="97" text-anchor="middle">①</text>
+
+      <line x1="332" y1="105" x2="388" y2="105" stroke="#888780" stroke-width="1" marker-end="url(#arr2)"/>
+      <text class="ts" x="360" y="97" text-anchor="middle">②</text>
+
+      <line x1="455" y1="138" x2="455" y2="170" x2="265" stroke="#888780" stroke-width="1"/>
+      <line x1="265" y1="170" x2="265" y2="138" stroke="#888780" stroke-width="1" marker-end="url(#arr2)"/>
+      <text class="ts" x="360" y="182" text-anchor="middle">③ IP 주소 반환</text>
+
+      <line x1="200" y1="128" x2="142" y2="128" stroke="#888780" stroke-width="1" marker-end="url(#arr2)"/>
+
+      <line x1="142" y1="118" x2="578" y2="118" stroke="#23405A" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arr2)"/>
+      <text class="ts" x="360" y="220" text-anchor="middle">④ IP 주소로 실제 서버 접속</text>
+    </svg>
+    <p class="diagram-caption">DNS 조회 흐름. Route 53이 ③의 권한 DNS 역할을 합니다.</p>
+  </div>
+
+  <h3>레코드 종류</h3>
+  <table>
+    <tr><th>타입</th><th>역할</th><th>예시</th></tr>
+    <tr><td class="mono">A</td><td>도메인 → IPv4 주소</td><td><code>api.example.com → 52.78.1.2</code></td></tr>
+    <tr><td class="mono">CNAME</td><td>도메인 → 다른 도메인</td><td><code>www → example.com</code></td></tr>
+    <tr><td class="mono">ALIAS</td><td>도메인 → AWS 리소스 (AWS 전용)</td><td>ALB, CloudFront 연결 시</td></tr>
+    <tr><td class="mono">NS</td><td>이 도메인의 권한 DNS 서버</td><td>호스팅 영역 생성 시 자동 발급</td></tr>
+    <tr><td class="mono">MX</td><td>메일 서버 지정</td><td>이메일 수신 경로</td></tr>
+  </table>
+
+  <h3>TTL — DNS 전파가 왜 느린가</h3>
+  <p>TTL(Time To Live)은 DNS 응답을 <strong>캐시에 얼마나 보관할지 초 단위로 지정</strong>하는 값입니다. TTL이 3600이면 1시간 동안 캐시된 값을 씁니다. 도메인을 변경했는데 반영이 안 되는 이유가 이겁니다 — 전 세계 DNS 서버의 캐시가 만료될 때까지 기다려야 합니다.</p>
+  <p>도메인 이전 작업을 하기 전에 TTL을 300(5분)으로 낮춰두면 변경 반영이 빨라집니다.</p>
+</div>
+
+<!-- ── 캐싱 ── -->
+<div class="section">
+  <p class="section-label">캐싱</p>
+
+  <h2>캐싱 — 왜 빠르고 왜 오래된 데이터가 보이는가</h2>
+  <p>캐싱은 <strong>자주 쓰는 데이터를 가까운 곳에 미리 복사해두는 기법</strong>입니다. 원본까지 매번 가지 않아도 되니 빠릅니다. 대신 원본이 바뀌어도 캐시가 남아 있으면 오래된 데이터가 보입니다.</p>
+
+  <h3>AWS에서 캐싱이 쓰이는 곳</h3>
+  <table>
+    <tr><th>서비스</th><th>무엇을 캐싱하는가</th><th>관련 개념</th></tr>
+    <tr><td>CloudFront</td><td>정적 파일(HTML·CSS·JS·이미지)</td><td>TTL, Invalidation(캐시 무효화)</td></tr>
+    <tr><td>ElastiCache</td><td>DB 조회 결과, 세션 데이터</td><td>Redis, Memcached</td></tr>
+    <tr><td>ALB</td><td>연결 상태 (Connection draining)</td><td>Stickiness</td></tr>
+    <tr><td>Route 53</td><td>DNS 응답</td><td>TTL</td></tr>
+  </table>
+
+  <div class="callout warn">
+    <span class="callout-label">자주 겪는 문제</span>
+    <p>CloudFront에 파일을 새로 올렸는데 브라우저에 이전 파일이 계속 보인다면 캐시 때문입니다. CloudFront Invalidation을 실행하거나, 파일명에 버전을 붙이는 방식(<code>app.v2.js</code>)으로 해결합니다.</p>
+  </div>
+</div>
+
+<!-- ── 암호화·SSL/TLS ── -->
+<div class="section">
+  <p class="section-label">암호화 · SSL/TLS</p>
+
+  <h2>HTTPS가 동작하는 원리</h2>
+  <p>HTTP는 주고받는 내용이 평문입니다. 중간에서 누군가 패킷을 가로채면 그대로 읽힙니다. HTTPS는 TLS(Transport Layer Security)로 암호화한 HTTP입니다.</p>
+
+  <h3>TLS 핸드셰이크 — 연결이 맺어지는 순서</h3>
+  <ol class="steps">
+    <li>
+      <b>Client Hello</b>
+      <span>브라우저가 서버에 연결 요청. 지원하는 암호화 방식 목록을 보냅니다.</span>
+    </li>
+    <li>
+      <b>Server Hello + 인증서 전송</b>
+      <span>서버가 암호화 방식을 선택하고 SSL 인증서를 보냅니다. 인증서 안에 서버의 공개키가 있습니다.</span>
+    </li>
+    <li>
+      <b>인증서 검증</b>
+      <span>브라우저가 인증서를 CA(인증 기관)에 확인합니다. 유효하면 계속 진행합니다. 주소창의 자물쇠가 이 단계입니다.</span>
+    </li>
+    <li>
+      <b>세션 키 교환</b>
+      <span>이후 통신에 쓸 대칭키를 서버 공개키로 암호화해 전송합니다. 서버만 복호화할 수 있습니다.</span>
+    </li>
+    <li>
+      <b>암호화 통신 시작</b>
+      <span>이제부터는 공유된 대칭키로 데이터를 암호화·복호화합니다.</span>
+    </li>
+  </ol>
+
+  <h3>AWS에서의 TLS</h3>
+  <table>
+    <tr><th>서비스</th><th>역할</th></tr>
+    <tr><td>ACM (AWS Certificate Manager)</td><td>TLS 인증서 발급 · 자동 갱신 (무료)</td></tr>
+    <tr><td>ALB</td><td>TLS 종료 지점 — 브라우저↔ALB는 HTTPS, ALB↔EC2는 HTTP</td></tr>
+    <tr><td>CloudFront</td><td>TLS 종료 지점 — 엣지에서 암호화 처리</td></tr>
+    <tr><td>NLB</td><td>TLS 패스스루 — 암호화 상태 그대로 EC2에 전달</td></tr>
+  </table>
+
+  <div class="callout info">
+    <span class="callout-label">SSL과 TLS</span>
+    <p>SSL은 TLS의 구 버전입니다. SSL 3.0 이후 TLS 1.0 → 1.1 → 1.2 → 1.3으로 발전했습니다. 현재 SSL은 보안 취약점으로 사용하지 않지만, 업계 관습적으로 TLS를 "SSL"이라 부르는 경우가 많습니다. ISMS-P 인증에서 TLS 1.2 미만 차단을 요구하는 것도 이 맥락입니다.</p>
+  </div>
+</div>
+
+<!-- ── RDBMS vs NoSQL ── -->
+<div class="section">
+  <p class="section-label">RDBMS vs NoSQL</p>
+
+  <h2>RDS와 DynamoDB — 선택 기준</h2>
+  <p>AWS에서 데이터베이스를 선택할 때 가장 먼저 마주치는 질문입니다. 정해진 답은 없고, 데이터의 성격과 서비스 요구사항에 따라 다릅니다.</p>
+
+  <h3>RDBMS (관계형 데이터베이스)</h3>
+  <p>데이터를 <strong>표(테이블) 형태로 저장</strong>하고, 테이블 간 관계를 정의합니다. SQL로 조회합니다.</p>
+  <table>
+    <tr><th>특징</th><th>내용</th></tr>
+    <tr><td>스키마</td><td>고정 — 컬럼을 미리 정의해야 함</td></tr>
+    <tr><td>조인</td><td>여러 테이블을 연결해 복잡한 조회 가능</td></tr>
+    <tr><td>트랜잭션</td><td>ACID 보장 (원자성·일관성·격리성·지속성)</td></tr>
+    <tr><td>확장 방식</td><td>수직 확장 (서버 사양 업그레이드)</td></tr>
+    <tr><td>AWS 서비스</td><td>RDS (MySQL, PostgreSQL, Oracle...)</td></tr>
+    <tr><td>적합한 경우</td><td>주문·결제·회원 등 정형 데이터, 복잡한 조인이 필요한 경우</td></tr>
+  </table>
+
+  <h3>NoSQL (비관계형 데이터베이스)</h3>
+  <p>테이블 형태에 얽매이지 않고 <strong>문서·키-값·그래프 등 다양한 형태로 저장</strong>합니다.</p>
+  <table>
+    <tr><th>특징</th><th>내용</th></tr>
+    <tr><td>스키마</td><td>유연 — 항목마다 다른 필드 가능</td></tr>
+    <tr><td>조인</td><td>기본적으로 없음 (애플리케이션 레벨에서 처리)</td></tr>
+    <tr><td>트랜잭션</td><td>제한적 (서비스마다 다름)</td></tr>
+    <tr><td>확장 방식</td><td>수평 확장 (서버를 여러 대로)</td></tr>
+    <tr><td>AWS 서비스</td><td>DynamoDB (키-값 · 문서), ElastiCache (Redis)</td></tr>
+    <tr><td>적합한 경우</td><td>세션 저장, 로그, 대용량 단순 조회, 스키마가 자주 바뀌는 경우</td></tr>
+  </table>
+
+  <div class="callout info">
+    <span class="callout-label">파르나스 시스템 기준으로 보면</span>
+    <p>예약·결제·멤버십처럼 데이터 정합성이 중요하고 복잡한 조인이 필요한 경우 → RDS (Oracle, MySQL). 세션 관리나 캐싱처럼 빠른 읽기·쓰기가 필요한 경우 → ElastiCache (Redis). 이 둘을 상황에 맞게 병행하는 게 실무 패턴입니다.</p>
+  </div>
+</div>
+
+<!-- ── 정리 ── -->
+<div class="section">
+  <p class="section-label">챕터 정리</p>
+  <h2>핵심 정리</h2>
+  <table>
+    <tr><th>개념</th><th>한 줄 요약</th><th>AWS 연관</th></tr>
+    <tr><td>OSI 7 Layer</td><td>네트워크를 7개 역할로 나눈 설계 원칙</td><td>보안 그룹(L4), VPC(L3), ALB(L7)</td></tr>
+    <tr><td>TCP/UDP</td><td>TCP는 신뢰성, UDP는 속도</td><td>보안 그룹 프로토콜 지정</td></tr>
+    <tr><td>DNS</td><td>도메인 이름을 IP로 변환</td><td>Route 53</td></tr>
+    <tr><td>TTL</td><td>캐시 보관 시간 (초 단위)</td><td>DNS 전파 속도, CloudFront 캐시</td></tr>
+    <tr><td>TLS/HTTPS</td><td>공개키로 세션키 교환 후 암호화 통신</td><td>ACM, ALB, CloudFront</td></tr>
+    <tr><td>RDBMS</td><td>표 형태, 스키마 고정, 조인 가능</td><td>RDS</td></tr>
+    <tr><td>NoSQL</td><td>유연한 스키마, 수평 확장</td><td>DynamoDB, ElastiCache</td></tr>
+  </table>
+
+  <div class="callout safe">
+    <span class="callout-label">다음 챕터로 넘어가기 전에</span>
+    <p>"보안 그룹에서 TCP 22번 포트를 내 IP만 허용"이라는 문장을 읽고 무슨 뜻인지 바로 이해된다면 이 챕터를 마친 겁니다.</p>
+    <p>OSI L4(TCP) · 포트(22) · 소스(내 IP) — 세 개념이 한 문장에 다 들어 있습니다.</p>
+  </div>
+</div>
+
+<!-- ── Chapter Nav ── -->
+<nav class="ch-nav" id="ch-nav"></nav>
+
+<footer>
+  <p>aws-guide · CH00 · 사전 지식 — 네트워크·보안 기초</p>
+</footer>
+
+</div><!-- /wrap -->
+
+<script src="/assets/nav.js"></script>
+</body>
+</html>

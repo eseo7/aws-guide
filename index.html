@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AWS 완전 정복 가이드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+/* 목차 전용 스타일 */
+.hero { padding: 64px 0 48px; border-bottom: 2px solid var(--ink); }
+.hero h1 { font-size: clamp(28px,5vw,46px); font-weight:700; letter-spacing:-.02em; line-height:1.15; margin-bottom:16px; }
+.hero h1 span { display:block; color:var(--muted); font-weight:300; font-size:.52em; margin-top:8px; }
+.hero .sub { color:var(--muted); font-size:15px; font-weight:300; max-width:60ch; margin-bottom:28px; }
+.stats { display:flex; flex-wrap:wrap; gap:24px; margin-bottom:28px; }
+.stat dt { font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+.stat dd { font-family:var(--mono); font-size:22px; font-weight:600; color:var(--rail); }
+.stages { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
+.stage { background:var(--card); padding:12px 14px; }
+.stage dt { font-family:var(--mono); font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+.stage dd { font-size:13px; font-weight:500; }
+@media(max-width:600px){ .stages{grid-template-columns:repeat(2,1fr)} }
+
+/* 챕터 카드 목록 */
+.toc { padding: 48px 0; }
+.toc-stage-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--muted);
+  margin: 36px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--line);
+}
+.toc-stage-label:first-child { margin-top: 0; }
+
+.ch-card {
+  display: grid; grid-template-columns: 72px 1fr auto;
+  gap: 0 16px; align-items: center;
+  padding: 16px 0; border-bottom: 1px solid var(--line);
+  text-decoration: none; color: var(--ink);
+  transition: background .15s;
+}
+.ch-card:hover { background: var(--card); margin: 0 -16px; padding: 16px; }
+.ch-card:last-child { border-bottom: none; }
+.ch-card .num {
+  font-family: var(--mono); font-size: 28px; font-weight: 600;
+  color: var(--line); line-height: 1; letter-spacing: -.03em;
+}
+.ch-card .info {}
+.ch-card .info .title { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+.ch-card .info .svc { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .03em; }
+.ch-card .tags { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+
+.wip {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .06em;
+  color: var(--muted); border: 1px solid var(--line);
+  padding: 2px 7px; white-space: nowrap;
+}
+
+footer { padding: 40px 0 60px; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav-in">
+    <span class="topnav-current" style="font-size:12px">aws-guide</span>
+    <div class="topnav-progress" style="max-width:120px">
+      <div class="topnav-fill" style="width:100%"></div>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<header class="hero">
+  <p class="ch-eyebrow">AWS 완전 정복 가이드 · Spring Boot 기준</p>
+  <h1>인프라를 직접 구성할 수 있는 수준까지<span>사전 지식부터 실전 아키텍처·CI/CD·모니터링까지</span></h1>
+  <p class="sub">AWS 강의실 기초 강의 + 인프런 배포 강의 두 커리큘럼을 합쳐 재편했습니다.</p>
+  <dl class="stats">
+    <div class="stat"><dt>챕터</dt><dd>12</dd></div>
+    <div class="stat"><dt>섹션</dt><dd>118</dd></div>
+    <div class="stat"><dt>실습</dt><dd>54</dd></div>
+    <div class="stat"><dt>개념</dt><dd>38</dd></div>
+  </dl>
+  <dl class="stages">
+    <div class="stage"><dt>사전·기초</dt><dd>CH 00–01</dd></div>
+    <div class="stage"><dt>핵심 서비스</dt><dd>CH 02–07</dd></div>
+    <div class="stage"><dt>운영·자동화</dt><dd>CH 08–09</dd></div>
+    <div class="stage"><dt>실전·심화</dt><dd>CH 10–11</dd></div>
+  </dl>
+</header>
+
+<div class="toc">
+
+  <p class="toc-stage-label">사전·기초</p>
+
+  <a class="ch-card" href="/chapters/ch00/">
+    <div class="num">00</div>
+    <div class="info">
+      <div class="title">사전 지식 — 네트워크·보안 기초</div>
+      <div class="svc">OSI 7 Layer · DNS · 캐싱 · 암호화 · RDBMS vs NoSQL</div>
+    </div>
+    <div class="tags"><span class="tag stage">사전·기초</span><span class="tag safe">과금 없음</span></div>
+  </a>
+
+  <a class="ch-card" href="/chapters/ch01/">
+    <div class="num">01</div>
+    <div class="info">
+      <div class="title">AWS 기초 개념</div>
+      <div class="svc">클라우드 · 가상화 · AWS 구조 · 계정 · IAM</div>
+    </div>
+    <div class="tags"><span class="tag stage">사전·기초</span><span class="tag safe">과금 없음</span></div>
+  </a>
+
+  <p class="toc-stage-label">핵심 서비스</p>
+
+  <a class="ch-card" href="/chapters/ch02/">
+    <div class="num">02</div>
+    <div class="info">
+      <div class="title">Amazon EC2</div>
+      <div class="svc">EC2 · EBS · AMI · 보안 그룹 · 탄력적 IP · ENI</div>
+    </div>
+    <div class="tags"><span class="tag stage">핵심 서비스</span><span class="tag warn">시간당 과금</span></div>
+  </a>
+
+  <a class="ch-card" href="/chapters/ch03/">
+    <div class="num">03</div>
+    <div class="info">
+      <div class="title">Amazon VPC</div>
+      <div class="svc">VPC · 서브넷 · 라우팅 · IGW · NAT · NACL · Bastion Host</div>
+    </div>
+    <div class="tags"><span class="tag stage">핵심 서비스</span><span class="tag warn">NAT 과금</span></div>
+  </a>
+
+  <a class="ch-card" href="/chapters/ch04/">
+    <div class="num">04</div>
+    <div class="info">
+      <div class="title">ELB · Auto Scaling</div>
+      <div class="svc">ALB · NLB · ASG · 헬스 체크 · 스케일링 정책</div>
+    </div>
+    <div class="tags"><span class="tag stage">핵심 서비스</span><span class="tag warn">시간당 과금</span></div>
+  </a>
+
+  <a class="ch-card" href="/chapters/ch05/">
+    <div class="num">05</div>
+    <div class="info">
+      <div class="title">Amazon S3</div>
+      <div class="svc">S3 · 스토리지 클래스 · 버전 관리 · 암호화 · 정적 호스팅</div>
+    </div>
+    <div class="tags"><span class="tag stage">핵심 서비스</span><span class="tag safe">상시 무료 5GB</span></div>
+  </a>
+
+  <a class="ch-card" href="/chapters/ch06/">
+    <div class="num">06</div>
+    <div class="info">
+      <div class="title">Amazon RDS</div>
+      <div class="svc">RDS · Aurora · Aurora Serverless · RDS Proxy · Secrets Manager</div>
+    </div>
+    <div class="tags"><span class="tag stage">핵심 서비스</span><span class="tag warn">⚠ 과금 위험</span></div>
+  </a>
+
+  <a class="ch-card" href="/chapters/ch07/">
+    <div class="num">07</div>
+    <div class="info">
+      <div class="title">Route 53 · CloudFront</div>
+      <div class="svc">Route 53 · DNS · Routing Policy · CloudFront · ACM · OAC</div>
+    </div>
+    <div class="tags"><span class="tag stage">핵심 서비스</span><span class="tag warn">호스팅 영역 $0.5</span></div>
+  </a>
+
+  <p class="toc-stage-label">운영·자동화</p>
+
+  <a class="ch-card" href="/chapters/ch08/">
+    <div class="num">08</div>
+    <div class="info">
+      <div class="title">CloudWatch · 모니터링</div>
+      <div class="svc">CloudWatch · 지표 · 로그 · 경보 · 대시보드 · CloudTrail</div>
+    </div>
+    <div class="tags"><span class="tag stage">운영·자동화</span><span class="tag safe">기본 무료</span></div>
+  </a>
+
+  <a class="ch-card" href="/chapters/ch09/">
+    <div class="num">09</div>
+    <div class="info">
+      <div class="title">CI/CD 자동화</div>
+      <div class="svc">CodePipeline · CodeBuild · CodeDeploy · Systems Manager</div>
+    </div>
+    <div class="tags"><span class="tag stage">운영·자동화</span></div>
+  </a>
+
+  <p class="toc-stage-label">실전·심화</p>
+
+  <a class="ch-card" href="/chapters/ch10/">
+    <div class="num">10</div>
+    <div class="info">
+      <div class="title">종합 실습 — 실전 아키텍처</div>
+      <div class="svc">EC2 · ALB · ASG · RDS · S3 · CloudFront · Route 53 · CI/CD</div>
+    </div>
+    <div class="tags"><span class="tag stage">실전·심화</span><span class="tag warn">⚠ 당일 정리 필수</span><span class="tag rail">최종 목표</span></div>
+  </a>
+
+  <a class="ch-card" href="/chapters/ch11/">
+    <div class="num">11</div>
+    <div class="info">
+      <div class="title">비용 관리</div>
+      <div class="svc">Billing · Budgets · Cost Explorer · Trusted Advisor</div>
+    </div>
+    <div class="tags"><span class="tag stage">실전·심화</span><span class="tag safe">과금 없음</span></div>
+  </a>
+
+</div><!-- /toc -->
+
+<footer>
+  <p>AWS 강의실 기초 강의 + 인프런 배포 강의를 합쳐 재편했습니다. Spring Boot 기준. 비학습 항목 및 기업 계정 관리 항목 제외.</p>
+</footer>
+
+</div><!-- /wrap -->
+</body>
+</html>
