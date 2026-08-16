@@ -713,7 +713,7 @@ table { border-collapse: collapse; width: 100%; }
   align-items: start;
   padding: 48px 0 80px;
 }
-.chapter-content {}
+.chapter-content { min-width: 0; }
 
 /* Sticky TOC */
 .chapter-toc {
