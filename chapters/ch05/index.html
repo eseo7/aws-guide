@@ -1,39 +1,235 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CH05 — Amazon S3 · AWS 완전 정복 가이드</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CH05 · Amazon S3 — AWS 완전 정복 가이드</title>
+  <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body>
-<nav class="topnav">
-  <div class="topnav-in">
-    <a href="/" class="topnav-home">aws-guide</a>
-    <span class="topnav-sep">/</span>
-    <span class="topnav-current">CH05 · Amazon S3</span>
-    <div class="topnav-progress"><div class="topnav-fill" id="progress-fill"></div></div>
+
+<nav class="chapter-topnav">
+  <div class="container">
+    <div class="chapter-topnav-inner">
+      <a href="/" class="back-link"><span class="back-arrow">←</span><span>목차로</span></a>
+      <span class="chapter-nav-label">CH05 · Amazon S3</span>
+      <div class="chapter-nav-actions">
+        <button class="complete-btn" id="completeBtn" data-chapter-id="ch05">
+          <span class="complete-icon">○</span><span class="complete-text">완료로 표시</span>
+        </button>
+      </div>
+    </div>
   </div>
 </nav>
-<div class="wrap">
-<header class="ch-hero">
-  <p class="ch-eyebrow">Chapter 05</p>
-  <div class="ch-num">05</div>
-  <h1>Amazon S3</h1>
-</header>
-<div class="section">
-  <p class="section-label">준비 중</p>
-  <div class="callout info">
-    <span class="callout-label">작업 중인 챕터입니다</span>
-    <p>이 챕터는 현재 작성 중입니다. 곧 업데이트됩니다.</p>
+
+<section class="chapter-hero">
+  <div class="container">
+    <div class="chapter-hero-inner">
+      <div class="chapter-hero-left">
+        <div class="chapter-hero-number">
+          <span class="chapter-num-badge" style="background:var(--cat-core-h)">05</span>
+          CHAPTER 05 · 핵심 서비스
+        </div>
+        <h1 class="chapter-hero-title">Amazon S3</h1>
+        <p class="chapter-hero-subtitle">무제한 파일 창고 — 이미지부터 정적 사이트까지</p>
+        <div class="chapter-hero-tags">
+          <span class="tag tag-cat-core">핵심 서비스</span>
+          <span class="tag tag-free">상시 무료 5GB</span>
+          <span class="tag tag-neutral">Spring Boot 기준</span>
+        </div>
+        <p class="chapter-hero-services">S3 · 버킷 · 객체 · 스토리지 클래스 · 버전 관리 · 수명 주기 · 암호화 · 프리사인드 URL · 정적 호스팅</p>
+      </div>
+      <div class="chapter-info-card">
+        <div class="info-card-title">CHAPTER INFO</div>
+        <div class="info-card-item"><span class="info-icon">🗄</span><span>가장 많이 쓰는 AWS 서비스</span></div>
+        <div class="info-card-item"><span class="info-icon">💰</span><span>GB당 월 $0.023 (Standard)</span></div>
+        <div class="info-card-item"><span class="info-icon">🔗</span><span>이전: CH04 ELB · Auto Scaling</span></div>
+        <div class="info-card-item"><span class="info-icon">🔗</span><span>다음: CH06 Amazon RDS</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+  <div class="chapter-layout">
+    <main class="chapter-content">
+
+      <section class="content-section" id="what">
+        <div class="section-label">01</div>
+        <h2>S3란 — 서버 디스크에 저장하면 안 되는 이유</h2>
+        <p>사용자가 올린 이미지를 EC2 디스크에 저장하면 어떻게 될까요? Auto Scaling으로 서버가 여러 대 떠 있을 때 한 서버에만 파일이 있습니다. 서버를 교체하면 파일이 사라집니다.</p>
+        <p>S3(Simple Storage Service)는 <strong>파일을 EC2와 분리해서 저장하는 전용 오브젝트 스토리지</strong>입니다. 서버가 몇 대든, 교체하든 파일은 S3에 안전하게 있습니다.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-header">🗄 S3 아키텍처 — 파일 업로드 흐름</div>
+          <div class="diagram-body">
+            <div class="dns-flow">
+              <div class="dns-node"><div class="dns-node-icon">📱</div><span>클라이언트</span></div>
+              <div class="dns-arrow">①파일 전송</div>
+              <div class="dns-node"><div class="dns-node-icon">⚖️</div><span>ALB</span></div>
+              <div class="dns-arrow">②</div>
+              <div class="dns-node"><div class="dns-node-icon">🖥</div><span>Spring Boot<br>EC2</span></div>
+              <div class="dns-arrow">③PutObject</div>
+              <div class="dns-node"><div class="dns-node-icon">🗄</div><span>S3<br>버킷</span></div>
+            </div>
+          </div>
+        </div>
+
+        <h3>S3 기본 구조</h3>
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead><tr><th>용어</th><th>의미</th><th>비유</th></tr></thead>
+            <tbody>
+              <tr><td><strong>버킷(Bucket)</strong></td><td>파일을 담는 최상위 컨테이너. 이름은 전 세계에서 유일해야 함</td><td>외장 하드</td></tr>
+              <tr><td><strong>객체(Object)</strong></td><td>버킷에 저장된 파일. 파일 본체 + 메타데이터</td><td>파일</td></tr>
+              <tr><td><strong>키(Key)</strong></td><td>객체의 이름(경로). <code>images/2024/photo.jpg</code></td><td>파일 경로</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="content-section" id="class">
+        <div class="section-label">02</div>
+        <h2>스토리지 클래스 — 비용 최적화</h2>
+        <p>파일마다 접근 빈도가 다릅니다. 자주 쓰는 파일은 빠른 스토리지에, 거의 안 쓰는 파일은 저렴한 아카이브에 두면 비용을 크게 줄일 수 있습니다.</p>
+
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead><tr><th>클래스</th><th>접근 빈도</th><th>저장 비용</th><th>조회 비용</th><th>용도</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Standard</strong></td><td>자주</td><td>$0.023/GB</td><td>없음</td><td>이미지, 정적 파일</td></tr>
+              <tr><td><strong>Standard-IA</strong></td><td>가끔</td><td>$0.0125/GB</td><td>있음</td><td>백업, 로그</td></tr>
+              <tr><td><strong>Glacier</strong></td><td>거의 없음</td><td>$0.004/GB</td><td>높음·느림</td><td>장기 아카이브</td></tr>
+              <tr><td><strong>Intelligent-Tiering</strong></td><td>패턴 불명</td><td>자동</td><td>자동</td><td>접근 패턴 불규칙 시</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="content-section" id="security">
+        <div class="section-label">03</div>
+        <h2>S3 권한 — 퍼블릭 액세스 차단</h2>
+        <p>S3 버킷은 기본적으로 모든 퍼블릭 액세스가 차단돼 있습니다. <strong>이 설정을 절대 끄지 마세요.</strong></p>
+
+        <div class="callout callout-warn">
+          <span class="callout-icon">🚨</span>
+          <div class="callout-body">
+            <strong>퍼블릭 버킷으로 인한 데이터 유출 사고가 실제로 많습니다</strong><br>
+            "일단 열어두고 나중에 닫자"는 생각이 사고로 이어집니다. 파일을 공개해야 한다면 퍼블릭 버킷 대신 CloudFront + OAC 조합이나 프리사인드 URL을 쓰세요.
+          </div>
+        </div>
+
+        <h3>IAM 역할 vs 액세스 키</h3>
+        <p>EC2에서 S3에 파일을 올리려면 권한이 필요합니다. <strong>액세스 키를 코드에 넣는 방식은 절대 안 됩니다.</strong> EC2에 IAM 역할을 붙이면 코드에 키 없이도 동작합니다.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-header">✅ 올바른 방식 — IAM 역할 사용</div>
+          <div class="diagram-body">
+            <pre style="background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:8px;font-size:13px;line-height:1.8;overflow-x:auto;margin:0"><code><span style="color:#6C7086">// application.yml — 키 설정 없음</span>
+cloud:
+  aws:
+    region:
+      static: ap-northeast-2
+    <span style="color:#6C7086"># EC2에 IAM 역할이 붙어 있으면 자격증명 자동 주입</span>
+
+<span style="color:#6C7086">// S3Service.java</span>
+@Service
+public class S3Service {
+    private final AmazonS3 s3;  <span style="color:#6C7086">// IAM 역할로 자동 인증</span>
+
+    public String upload(MultipartFile file) {
+        String key = "uploads/" + UUID.randomUUID() + "_" + file.getOriginalFilename();
+        s3.putObject(bucketName, key, file.getInputStream(), metadata);
+        return key;
+    }
+}</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" id="presigned">
+        <div class="section-label">04</div>
+        <h2>프리사인드 URL — 비공개 파일을 안전하게 제공</h2>
+        <p>버킷은 비공개로 두면서 특정 파일을 일정 시간만 공개하고 싶을 때 씁니다. 서버가 서명된 URL을 생성하고, 클라이언트는 그 URL로 직접 S3에서 파일을 받습니다.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-header">🔑 프리사인드 URL 흐름</div>
+          <div class="diagram-body">
+            <pre style="background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:8px;font-size:13px;line-height:1.8;overflow-x:auto;margin:0"><code><span style="color:#6C7086">// 프리사인드 URL 생성 (15분 유효)</span>
+public String getPresignedUrl(String key) {
+    Date expiration = new Date(System.currentTimeMillis() + 15 * 60 * 1000);
+    GeneratePresignedUrlRequest request =
+        new GeneratePresignedUrlRequest(bucketName, key)
+            .withExpiration(expiration);
+    return s3.generatePresignedUrl(request).toString();
+}
+
+<span style="color:#6C7086">// 생성된 URL 예시</span>
+<span style="color:#A6E3A1">https://my-bucket.s3.ap-northeast-2.amazonaws.com/uploads/photo.jpg
+  ?X-Amz-Algorithm=AWS4-HMAC-SHA256
+  &X-Amz-Expires=900
+  &X-Amz-Signature=abc123...</span></code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" id="static">
+        <div class="section-label">실습</div>
+        <h2>S3 정적 웹 호스팅</h2>
+        <p>React, Vue로 만든 프론트엔드는 빌드하면 HTML·CSS·JS 파일이 됩니다. 서버 없이 S3 + CloudFront로 서비스할 수 있습니다.</p>
+
+        <ol style="font-size:15px;color:var(--text-2);line-height:2.2;padding-left:20px">
+          <li>버킷 생성 — 퍼블릭 액세스 차단 유지</li>
+          <li>빌드 결과물 업로드 (<code>npm run build</code>의 <code>dist/</code>)</li>
+          <li>속성 탭 → 정적 웹사이트 호스팅 활성화 → 인덱스 문서: <code>index.html</code></li>
+          <li>CloudFront 배포 → 원본: S3 버킷 → OAC 설정 (다음 챕터에서 상세 다룸)</li>
+        </ol>
+
+        <div class="summary-card">
+          <div class="summary-card-title">📌 CH05 핵심 개념 요약</div>
+          <div class="summary-item"><span class="summary-term">S3 용도</span><span>이미지·파일을 EC2와 분리 저장. 서버 교체·스케일링에 영향 없음</span></div>
+          <div class="summary-item"><span class="summary-term">퍼블릭 액세스 차단</span><span>기본값 유지. 절대 끄지 말 것. 필요하면 CloudFront+OAC 또는 프리사인드 URL</span></div>
+          <div class="summary-item"><span class="summary-term">IAM 역할</span><span>EC2에 역할 부여 → 코드에 키 없이 S3 접근. 액세스 키 코드 삽입 금지</span></div>
+          <div class="summary-item"><span class="summary-term">프리사인드 URL</span><span>비공개 파일을 시간 제한으로 공개. 서버가 URL 생성, 클라이언트가 직접 S3에서 다운로드</span></div>
+          <div class="summary-item"><span class="summary-term">스토리지 클래스</span><span>Standard→IA→Glacier 순으로 저렴. 수명 주기 정책으로 자동 이동 가능</span></div>
+        </div>
+      </section>
+
+      <div class="chapter-pagination">
+        <a href="/chapters/ch04/" class="pag-link pag-prev">
+          <span class="pag-dir">← 이전 챕터</span>
+          <span class="pag-title">CH04 ELB · Auto Scaling</span>
+          <span class="pag-sub">고가용성과 자동 확장</span>
+        </a>
+        <a href="/chapters/ch06/" class="pag-link pag-next">
+          <span class="pag-dir">다음 챕터 →</span>
+          <span class="pag-title">CH06 Amazon RDS</span>
+          <span class="pag-sub">관리형 관계형 데이터베이스</span>
+        </a>
+      </div>
+
+    </main>
+
+    <aside class="chapter-toc">
+      <div class="toc-card">
+        <div class="toc-title">이 챕터의 목차</div>
+        <ul class="toc-list">
+          <li><a href="#what" class="toc-link">01 · S3란</a></li>
+          <li><a href="#class" class="toc-link">02 · 스토리지 클래스</a></li>
+          <li><a href="#security" class="toc-link">03 · 권한 · IAM 역할</a></li>
+          <li><a href="#presigned" class="toc-link">04 · 프리사인드 URL</a></li>
+          <li><a href="#static" class="toc-link">실습 · 정적 웹 호스팅</a></li>
+        </ul>
+      </div>
+    </aside>
   </div>
 </div>
-<nav class="ch-nav" id="ch-nav"></nav>
-<footer><p>aws-guide · CH05 · Amazon S3</p></footer>
-</div>
-<script src="/assets/nav.js"></script>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>AWS 완전 정복 가이드 · CH05 · Amazon S3</p>
+  </div>
+</footer>
+<script src="../../assets/nav.js"></script>
 </body>
 </html>

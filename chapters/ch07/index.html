@@ -1,39 +1,257 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CH07 — Route 53 · CloudFront · AWS 완전 정복 가이드</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CH07 · Route 53 · CloudFront — AWS 완전 정복 가이드</title>
+  <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body>
-<nav class="topnav">
-  <div class="topnav-in">
-    <a href="/" class="topnav-home">aws-guide</a>
-    <span class="topnav-sep">/</span>
-    <span class="topnav-current">CH07 · Route 53 · CloudFront</span>
-    <div class="topnav-progress"><div class="topnav-fill" id="progress-fill"></div></div>
+
+<nav class="chapter-topnav">
+  <div class="container">
+    <div class="chapter-topnav-inner">
+      <a href="/" class="back-link"><span class="back-arrow">←</span><span>목차로</span></a>
+      <span class="chapter-nav-label">CH07 · Route 53 · CloudFront</span>
+      <div class="chapter-nav-actions">
+        <button class="complete-btn" id="completeBtn" data-chapter-id="ch07">
+          <span class="complete-icon">○</span><span class="complete-text">완료로 표시</span>
+        </button>
+      </div>
+    </div>
   </div>
 </nav>
-<div class="wrap">
-<header class="ch-hero">
-  <p class="ch-eyebrow">Chapter 07</p>
-  <div class="ch-num">07</div>
-  <h1>Route 53 · CloudFront</h1>
-</header>
-<div class="section">
-  <p class="section-label">준비 중</p>
-  <div class="callout info">
-    <span class="callout-label">작업 중인 챕터입니다</span>
-    <p>이 챕터는 현재 작성 중입니다. 곧 업데이트됩니다.</p>
+
+<section class="chapter-hero">
+  <div class="container">
+    <div class="chapter-hero-inner">
+      <div class="chapter-hero-left">
+        <div class="chapter-hero-number">
+          <span class="chapter-num-badge" style="background:var(--cat-core-h)">07</span>
+          CHAPTER 07 · 핵심 서비스
+        </div>
+        <h1 class="chapter-hero-title">Route 53 · CloudFront</h1>
+        <p class="chapter-hero-subtitle">도메인 연결부터 전 세계 CDN 배포까지</p>
+        <div class="chapter-hero-tags">
+          <span class="tag tag-cat-core">핵심 서비스</span>
+          <span class="tag tag-billing">호스팅 영역 월 $0.5</span>
+          <span class="tag tag-danger">CloudFront 인증서는 버지니아</span>
+        </div>
+        <p class="chapter-hero-services">Route 53 · 호스팅 영역 · 레코드 · Routing Policy · CloudFront · OAC · ACM · Invalidation</p>
+      </div>
+      <div class="chapter-info-card">
+        <div class="info-card-title">CHAPTER INFO</div>
+        <div class="info-card-item"><span class="info-icon">🌐</span><span>도메인 + CDN 완성</span></div>
+        <div class="info-card-item"><span class="info-icon">💰</span><span>호스팅 영역 월 $0.5 고정</span></div>
+        <div class="info-card-item"><span class="info-icon">⚠️</span><span>CloudFront ACM은 반드시 us-east-1</span></div>
+        <div class="info-card-item"><span class="info-icon">🔗</span><span>이전: CH06 Amazon RDS</span></div>
+        <div class="info-card-item"><span class="info-icon">🔗</span><span>다음: CH08 CloudWatch</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+  <div class="chapter-layout">
+    <main class="chapter-content">
+
+      <section class="content-section" id="r53">
+        <div class="section-label">01</div>
+        <h2>Route 53 — AWS의 DNS 서비스</h2>
+        <p>Route 53은 <strong>도메인 이름을 IP 주소로 변환하는 AWS의 DNS 서비스</strong>입니다. 도메인 등록 대행도 하지만, 이미 다른 곳에서 산 도메인의 네임서버를 Route 53으로 바꾸는 방식도 많이 씁니다.</p>
+
+        <h3>호스팅 영역 — 도메인의 DNS 설정 공간</h3>
+        <p>Route 53에서 도메인을 관리하려면 먼저 호스팅 영역을 만들어야 합니다. 호스팅 영역을 만들면 NS(네임서버) 레코드 4개가 자동으로 만들어집니다. 이 네임서버를 도메인 등록기관에 등록하면 Route 53이 그 도메인의 DNS를 관리하게 됩니다.</p>
+
+        <div class="callout callout-warn">
+          <span class="callout-icon">💰</span>
+          <div class="callout-body">
+            <strong>호스팅 영역 요금 — 삭제 안 하면 계속 나갑니다</strong><br>
+            호스팅 영역 하나당 <strong>월 $0.50</strong>. 프리 티어에 포함되지 않습니다. 리소스를 다 지워도 호스팅 영역이 남아 있으면 매달 청구됩니다. 도메인 이전이나 학습 완료 후 반드시 삭제하세요.
+          </div>
+        </div>
+
+        <h3>레코드 종류</h3>
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead><tr><th>타입</th><th>역할</th><th>AWS에서 쓰는 곳</th></tr></thead>
+            <tbody>
+              <tr><td><strong>A</strong></td><td>도메인 → IPv4</td><td>EC2 탄력적 IP 연결</td></tr>
+              <tr><td><strong>ALIAS</strong></td><td>도메인 → AWS 리소스 (AWS 전용)</td><td>ALB, CloudFront 연결</td></tr>
+              <tr><td><strong>CNAME</strong></td><td>도메인 → 다른 도메인</td><td>서브도메인을 외부 서비스로</td></tr>
+              <tr><td><strong>NS</strong></td><td>이 도메인의 네임서버</td><td>호스팅 영역 생성 시 자동</td></tr>
+              <tr><td><strong>MX</strong></td><td>메일 서버 지정</td><td>이메일 수신 경로</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>ALB나 CloudFront를 연결할 때는 CNAME이 아니라 <strong>ALIAS</strong>를 씁니다. CNAME은 루트 도메인(<code>example.com</code>)에 쓸 수 없지만, ALIAS는 가능합니다. 또 AWS 리소스 간 요청은 과금이 없어서 ALIAS가 더 경제적입니다.</p>
+
+        <h3>Routing Policy</h3>
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead><tr><th>정책</th><th>작동 방식</th><th>용도</th></tr></thead>
+            <tbody>
+              <tr><td>Simple</td><td>하나의 IP 반환</td><td>단일 서버</td></tr>
+              <tr><td>Weighted</td><td>비율에 따라 여러 IP 반환 (70/30)</td><td>카나리 배포, A/B 테스트</td></tr>
+              <tr><td>Latency</td><td>사용자와 가장 가까운 리전으로</td><td>글로벌 서비스</td></tr>
+              <tr><td>Failover</td><td>Primary 장애 시 Secondary로</td><td>재해 복구</td></tr>
+              <tr><td>Geolocation</td><td>사용자 위치 기반</td><td>지역별 다른 콘텐츠</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="content-section" id="cloudfront">
+        <div class="section-label">02</div>
+        <h2>CloudFront — 전 세계 CDN</h2>
+        <p>CloudFront는 전 세계 450개 이상의 엣지 로케이션에 콘텐츠를 캐싱해서 사용자와 가까운 곳에서 제공하는 CDN 서비스입니다.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-header">🌏 CloudFront 동작 원리</div>
+          <div class="diagram-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div style="background:#FFF5F5;border-radius:8px;padding:14px">
+                <div style="font-size:11px;font-weight:700;color:#C92A2A;margin-bottom:8px">❌ CloudFront 없을 때</div>
+                <div class="dns-flow" style="flex-direction:column;gap:6px;align-items:flex-start">
+                  <span style="font-size:12px">🇰🇷 서울 사용자</span>
+                  <span style="font-size:11px;color:var(--text-3)">→ 미국 서버 (멀어서 느림)</span>
+                </div>
+              </div>
+              <div style="background:#EBFBEE;border-radius:8px;padding:14px">
+                <div style="font-size:11px;font-weight:700;color:#087F3E;margin-bottom:8px">✅ CloudFront 있을 때</div>
+                <div class="dns-flow" style="flex-direction:column;gap:6px;align-items:flex-start">
+                  <span style="font-size:12px">🇰🇷 서울 사용자</span>
+                  <span style="font-size:11px;color:var(--text-3)">→ 서울 엣지 (빠름)</span>
+                  <span style="font-size:11px;color:var(--text-3)">→ 캐시 없으면 오리진에서 가져옴</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h3>CloudFront를 쓰는 이유</h3>
+        <ul style="font-size:15px;color:var(--text-2);line-height:2;padding-left:20px">
+          <li><strong>속도</strong>: 전 세계 사용자에게 빠른 응답</li>
+          <li><strong>HTTPS</strong>: S3 정적 사이트도 HTTPS + 커스텀 도메인 가능</li>
+          <li><strong>보안</strong>: S3를 비공개로 두고 CloudFront만 접근 허용 (OAC)</li>
+          <li><strong>비용</strong>: 월 1TB 전송 무료. S3 직접 접근보다 데이터 전송 비용 감소</li>
+        </ul>
+      </section>
+
+      <section class="content-section" id="acm">
+        <div class="section-label">03</div>
+        <h2>ACM 인증서 — 반드시 버지니아에서 발급</h2>
+
+        <div class="callout callout-danger">
+          <span class="callout-icon">🚨</span>
+          <div class="callout-body">
+            <strong>CloudFront용 인증서는 us-east-1(버지니아)에서만 발급해야 합니다</strong><br>
+            서울(ap-northeast-2)에서 발급한 인증서는 CloudFront 설정 화면의 인증서 목록에 <strong>아예 나타나지 않습니다</strong>. 처음 하는 분의 99%가 여기서 막힙니다. ALB용 인증서는 ALB와 같은 리전, CloudFront용은 무조건 버지니아.
+          </div>
+        </div>
+
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead><tr><th>용도</th><th>발급 리전</th></tr></thead>
+            <tbody>
+              <tr><td>ALB HTTPS 인증서</td><td>ALB와 같은 리전 (예: 서울)</td></tr>
+              <tr><td>CloudFront HTTPS 인증서</td><td><strong>반드시 us-east-1 (버지니아)</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="content-section" id="oac">
+        <div class="section-label">04</div>
+        <h2>OAC — S3를 비공개로 유지하면서 CloudFront만 허용</h2>
+        <p>OAC(Origin Access Control)는 S3 버킷을 완전히 비공개로 두고, CloudFront만 접근할 수 있게 하는 방식입니다. 사용자는 CloudFront URL로만 접근하고, S3 버킷 URL로 직접 접근하면 차단됩니다.</p>
+
+        <ol style="font-size:15px;color:var(--text-2);line-height:2.2;padding-left:20px">
+          <li>S3 버킷 — 퍼블릭 액세스 차단 유지</li>
+          <li>CloudFront 배포 생성 → 원본: S3 버킷 → <strong>OAC 새로 생성</strong></li>
+          <li>CloudFront가 S3 버킷 정책을 자동으로 제안 → <strong>정책 복사 후 S3 버킷 정책에 붙여넣기</strong></li>
+          <li>기본 루트 객체: <code>index.html</code></li>
+          <li>SPA라면: 오류 응답 설정 → 403/404 → <code>/index.html</code> (200 반환)</li>
+        </ol>
+      </section>
+
+      <section class="content-section" id="invalidation">
+        <div class="section-label">실습</div>
+        <h2>캐시 무효화 (Invalidation)</h2>
+        <p>코드를 배포했는데 브라우저에 이전 버전이 계속 보인다면 CloudFront 캐시 때문입니다. Invalidation으로 캐시를 강제로 지울 수 있습니다.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-header">🔄 캐시 무효화 방법</div>
+          <div class="diagram-body">
+            <pre style="background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:8px;font-size:13px;line-height:1.8;overflow-x:auto;margin:0"><code><span style="color:#6C7086"># AWS CLI로 전체 캐시 무효화</span>
+aws cloudfront create-invalidation \
+  --distribution-id <span style="color:#A6E3A1">E1234567890</span> \
+  --paths "/*"
+
+<span style="color:#6C7086"># 특정 파일만 무효화</span>
+aws cloudfront create-invalidation \
+  --distribution-id <span style="color:#A6E3A1">E1234567890</span> \
+  --paths "/index.html" "/assets/app.js"</code></pre>
+          </div>
+        </div>
+
+        <div class="callout callout-tip">
+          <span class="callout-icon">💡</span>
+          <div class="callout-body">
+            <strong>Invalidation 대신 파일명에 버전 붙이기</strong><br>
+            <code>app.js</code> 대신 <code>app.abc123.js</code>처럼 빌드 해시를 파일명에 포함하면 캐시 문제가 없습니다. Vite, CRA 등 빌드 도구가 이 방식을 기본으로 지원합니다. Invalidation은 월 1000번까지 무료이지만, 파일명 해시 방식이 더 권장됩니다.
+          </div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-card-title">📌 CH07 핵심 개념 요약</div>
+          <div class="summary-item"><span class="summary-term">호스팅 영역</span><span>월 $0.50 고정. 도메인 DNS 관리 공간. 실습 후 삭제</span></div>
+          <div class="summary-item"><span class="summary-term">ALIAS vs CNAME</span><span>ALB·CloudFront 연결은 ALIAS. 루트 도메인에 쓸 수 있고 AWS 내 요청 무료</span></div>
+          <div class="summary-item"><span class="summary-term">ACM 인증서</span><span>ALB용 = 같은 리전. CloudFront용 = 반드시 us-east-1(버지니아)</span></div>
+          <div class="summary-item"><span class="summary-term">OAC</span><span>S3를 비공개로 유지 + CloudFront만 접근 허용. 퍼블릭 버킷보다 안전</span></div>
+          <div class="summary-item"><span class="summary-term">SPA 라우팅</span><span>오류 응답에서 403/404를 index.html(200)으로 설정해야 새로고침이 깨지지 않음</span></div>
+          <div class="summary-item"><span class="summary-term">캐시 무효화</span><span>Invalidation 또는 파일명 해시 방식. 배포 후 이전 파일이 보이면 여기 확인</span></div>
+        </div>
+      </section>
+
+      <div class="chapter-pagination">
+        <a href="/chapters/ch06/" class="pag-link pag-prev">
+          <span class="pag-dir">← 이전 챕터</span>
+          <span class="pag-title">CH06 Amazon RDS</span>
+          <span class="pag-sub">관리형 관계형 데이터베이스</span>
+        </a>
+        <a href="/chapters/ch08/" class="pag-link pag-next">
+          <span class="pag-dir">다음 챕터 →</span>
+          <span class="pag-title">CH08 CloudWatch · 모니터링</span>
+          <span class="pag-sub">운영 환경 가시성 확보</span>
+        </a>
+      </div>
+
+    </main>
+
+    <aside class="chapter-toc">
+      <div class="toc-card">
+        <div class="toc-title">이 챕터의 목차</div>
+        <ul class="toc-list">
+          <li><a href="#r53" class="toc-link">01 · Route 53</a></li>
+          <li><a href="#r53" class="toc-link toc-link-h3">레코드 종류</a></li>
+          <li><a href="#r53" class="toc-link toc-link-h3">Routing Policy</a></li>
+          <li><a href="#cloudfront" class="toc-link">02 · CloudFront</a></li>
+          <li><a href="#acm" class="toc-link">03 · ACM 인증서 주의사항</a></li>
+          <li><a href="#oac" class="toc-link">04 · OAC 설정</a></li>
+          <li><a href="#invalidation" class="toc-link">실습 · 캐시 무효화</a></li>
+        </ul>
+      </div>
+    </aside>
   </div>
 </div>
-<nav class="ch-nav" id="ch-nav"></nav>
-<footer><p>aws-guide · CH07 · Route 53 · CloudFront</p></footer>
-</div>
-<script src="/assets/nav.js"></script>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>AWS 완전 정복 가이드 · CH07 · Route 53 · CloudFront</p>
+  </div>
+</footer>
+<script src="../../assets/nav.js"></script>
 </body>
 </html>

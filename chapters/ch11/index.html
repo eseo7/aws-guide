@@ -1,39 +1,282 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CH11 — 비용 관리 · AWS 완전 정복 가이드</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CH11 · 비용 관리 — AWS 완전 정복 가이드</title>
+  <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body>
-<nav class="topnav">
-  <div class="topnav-in">
-    <a href="/" class="topnav-home">aws-guide</a>
-    <span class="topnav-sep">/</span>
-    <span class="topnav-current">CH11 · 비용 관리</span>
-    <div class="topnav-progress"><div class="topnav-fill" id="progress-fill"></div></div>
+
+<nav class="chapter-topnav">
+  <div class="container">
+    <div class="chapter-topnav-inner">
+      <a href="/" class="back-link"><span class="back-arrow">←</span><span>목차로</span></a>
+      <span class="chapter-nav-label">CH11 · 비용 관리</span>
+      <div class="chapter-nav-actions">
+        <button class="complete-btn" id="completeBtn" data-chapter-id="ch11">
+          <span class="complete-icon">○</span><span class="complete-text">완료로 표시</span>
+        </button>
+      </div>
+    </div>
   </div>
 </nav>
-<div class="wrap">
-<header class="ch-hero">
-  <p class="ch-eyebrow">Chapter 11</p>
-  <div class="ch-num">11</div>
-  <h1>비용 관리</h1>
-</header>
-<div class="section">
-  <p class="section-label">준비 중</p>
-  <div class="callout info">
-    <span class="callout-label">작업 중인 챕터입니다</span>
-    <p>이 챕터는 현재 작성 중입니다. 곧 업데이트됩니다.</p>
+
+<section class="chapter-hero">
+  <div class="container">
+    <div class="chapter-hero-inner">
+      <div class="chapter-hero-left">
+        <div class="chapter-hero-number">
+          <span class="chapter-num-badge" style="background:var(--cat-adv-h)">11</span>
+          CHAPTER 11 · 실전·심화
+        </div>
+        <h1 class="chapter-hero-title">비용 관리</h1>
+        <p class="chapter-hero-subtitle">AWS 요금이 어디서 새는지 — 감시·절약·점검 루틴</p>
+        <div class="chapter-hero-tags">
+          <span class="tag tag-cat-adv">실전·심화</span>
+          <span class="tag tag-free">과금 없음</span>
+          <span class="tag tag-neutral">월 1회 10분</span>
+        </div>
+        <p class="chapter-hero-services">Billing · AWS Budgets · Cost Explorer · Trusted Advisor · 비용 할당 태그</p>
+      </div>
+      <div class="chapter-info-card">
+        <div class="info-card-title">CHAPTER INFO</div>
+        <div class="info-card-item"><span class="info-icon">💰</span><span>비용 누수 방지 마지막 챕터</span></div>
+        <div class="info-card-item"><span class="info-icon">📊</span><span>월 1회 점검 루틴 구축</span></div>
+        <div class="info-card-item"><span class="info-icon">🔗</span><span>이전: CH10 종합 실습</span></div>
+        <div class="info-card-item"><span class="info-icon">🎉</span><span>커리큘럼 마지막 챕터</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+  <div class="chapter-layout">
+    <main class="chapter-content">
+
+      <section class="content-section" id="where">
+        <div class="section-label">01</div>
+        <h2>요금이 새는 대표 지점 7가지</h2>
+        <p>AWS를 쓰다 보면 잊어버린 리소스에서 조용히 비용이 나갑니다. 처음 배울 때 많이 겪는 패턴을 정리했습니다.</p>
+
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead><tr><th>서비스</th><th>함정</th><th>확인 방법</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>탄력적 IP</strong></td>
+                <td>인스턴스 없이 방치 → 시간당 과금</td>
+                <td>EC2 → 탄력적 IP → 연결 안 된 것 릴리스</td>
+              </tr>
+              <tr>
+                <td><strong>EBS 볼륨</strong></td>
+                <td>인스턴스 종료 후 볼륨이 남음</td>
+                <td>EC2 → 볼륨 → available 상태 삭제</td>
+              </tr>
+              <tr>
+                <td><strong>RDS</strong></td>
+                <td>중지 후 7일이면 자동 재시작</td>
+                <td>학습 후 삭제만이 답</td>
+              </tr>
+              <tr>
+                <td><strong>NAT Gateway</strong></td>
+                <td>삭제 안 하면 시간당 $0.059 계속</td>
+                <td>VPC → NAT Gateway → 삭제</td>
+              </tr>
+              <tr>
+                <td><strong>로드 밸런서</strong></td>
+                <td>인스턴스 없어도 ALB 자체 과금</td>
+                <td>EC2 → 로드 밸런서 목록 확인</td>
+              </tr>
+              <tr>
+                <td><strong>스냅샷·AMI</strong></td>
+                <td>인스턴스 삭제해도 스냅샷 남음</td>
+                <td>EC2 → 스냅샷·AMI 탭 직접 확인</td>
+              </tr>
+              <tr>
+                <td><strong>호스팅 영역</strong></td>
+                <td>월 $0.50 고정. 도메인 없어도 청구</td>
+                <td>Route 53 → 호스팅 영역 목록 확인</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout-warn">
+          <span class="callout-icon">🌐</span>
+          <div class="callout-body">
+            <strong>다른 리전도 확인하세요</strong><br>
+            실수로 도쿄나 버지니아에 만든 리소스가 남아 있을 수 있습니다. 콘솔 우측 상단 리전 드롭다운을 바꿔가며 확인하거나, AWS 리소스 탐색기(Resource Explorer)를 활성화하면 전체 리전을 한 번에 볼 수 있습니다.
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" id="budgets">
+        <div class="section-label">02</div>
+        <h2>AWS Budgets — 예산 알림 설정</h2>
+        <p>예산을 설정하면 월 사용량이 임계값에 도달할 때 이메일로 알려줍니다. 이미 CH01에서 $1 예산을 설정했다면 이 챕터에서 더 세밀하게 조정합니다.</p>
+
+        <h3>권장 예산 구성</h3>
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead><tr><th>예산 이름</th><th>금액</th><th>알림 시점</th></tr></thead>
+            <tbody>
+              <tr><td>월별 전체 예산</td><td>$5 (학습 중)</td><td>실제 85%, 실제 100%, 예측 100%</td></tr>
+              <tr><td>EC2 예산</td><td>$2</td><td>실제 80%</td></tr>
+              <tr><td>RDS 예산</td><td>$1</td><td>실제 80%</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <ol style="font-size:15px;color:var(--text-2);line-height:2.2;padding-left:20px">
+          <li>Billing → Budgets → 예산 생성</li>
+          <li>예산 유형: 비용 예산</li>
+          <li>금액 및 기간: 월별 $5</li>
+          <li>알림: 실제 비용 85% → 이메일 수신</li>
+          <li>알림 추가: 실제 비용 100%, 예측 비용 100%</li>
+        </ol>
+      </section>
+
+      <section class="content-section" id="explorer">
+        <div class="section-label">03</div>
+        <h2>Cost Explorer — 비용 분석</h2>
+        <p>Cost Explorer는 서비스별·리전별·태그별로 비용을 시각화합니다. "지난달 어디서 제일 많이 썼지?"를 파악하는 도구입니다.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-header">📊 Cost Explorer 활용 팁</div>
+          <div class="diagram-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div style="background:var(--cat-basics-bg);border-radius:8px;padding:14px">
+                <div style="font-size:12px;font-weight:700;color:var(--cat-basics-text);margin-bottom:8px">서비스별 분류</div>
+                <p style="font-size:13px;color:var(--text-2);margin:0">EC2, RDS, NAT Gateway 중 어디서 제일 많이 나오는지 확인. NAT Gateway가 의외로 크게 잡힐 수 있음</p>
+              </div>
+              <div style="background:var(--cat-core-bg);border-radius:8px;padding:14px">
+                <div style="font-size:12px;font-weight:700;color:var(--cat-core-text);margin-bottom:8px">리전별 분류</div>
+                <p style="font-size:13px;color:var(--text-2);margin:0">서울 외 다른 리전에 비용이 잡히면 잊어버린 리소스가 있다는 신호</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h3>비용 할당 태그</h3>
+        <p>리소스에 태그를 붙이면 Cost Explorer에서 프로젝트별·환경별로 비용을 분리해서 볼 수 있습니다.</p>
+        <div class="diagram-card">
+          <div class="diagram-header">🏷 태그 예시</div>
+          <div class="diagram-body">
+            <pre style="background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:8px;font-size:13px;line-height:1.8;overflow-x:auto;margin:0"><code><span style="color:#6C7086"># EC2·RDS·ALB 등 리소스 생성 시 태그 추가</span>
+Project: parnas-rewards
+Environment: prod
+Owner: iseo
+
+<span style="color:#6C7086"># Billing → 비용 할당 태그에서 태그 활성화 (24시간 후 반영)</span></code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" id="trusted">
+        <div class="section-label">04</div>
+        <h2>Trusted Advisor — 절약 포인트 자동 감지</h2>
+        <p>Trusted Advisor는 AWS가 자동으로 계정을 스캔해서 비용 절약, 보안 개선, 성능 향상 포인트를 알려주는 서비스입니다.</p>
+
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead><tr><th>카테고리</th><th>체크 항목 예시</th></tr></thead>
+            <tbody>
+              <tr><td>비용 최적화</td><td>사용률 낮은 EC2 인스턴스 · 연결 안 된 탄력적 IP · 유휴 로드 밸런서</td></tr>
+              <tr><td>보안</td><td>MFA 미설정 루트 계정 · 0.0.0.0/0으로 열린 SSH 포트 · 공개된 S3 버킷</td></tr>
+              <tr><td>성능</td><td>EC2 배치 그룹 활용 여부</td></tr>
+              <tr><td>내결함성</td><td>RDS Multi-AZ 미사용 · 단일 AZ EC2</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout-tip">
+          <span class="callout-icon">💡</span>
+          <div class="callout-body">
+            <strong>무료 플랜에서도 핵심 보안 체크는 사용 가능합니다</strong><br>
+            Trusted Advisor 전체 기능은 Business/Enterprise Support 플랜이지만, 보안 관련 핵심 체크(MFA, 공개 S3, 열린 포트 등) 7가지는 무료입니다.
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" id="routine">
+        <div class="section-label">05</div>
+        <h2>월간 점검 루틴 — 10분으로 끝내기</h2>
+
+        <div class="callout callout-tip">
+          <span class="callout-icon">📅</span>
+          <div class="callout-body">
+            <strong>매월 1일, 10분 루틴</strong>
+          </div>
+        </div>
+
+        <ol style="font-size:15px;color:var(--text-2);line-height:2.5;padding-left:20px">
+          <li><strong>Billing → 청구서</strong>: 지난달 청구 금액 확인. 예상보다 크면 Cost Explorer로 원인 파악</li>
+          <li><strong>Cost Explorer</strong>: 서비스별 top 3 확인. 이상한 리전에 비용이 잡히면 즉시 확인</li>
+          <li><strong>EC2 → 인스턴스</strong>: running 상태인 인스턴스 목록. 학습용 서버가 남아 있으면 종료</li>
+          <li><strong>EC2 → 볼륨</strong>: available 상태 볼륨 삭제</li>
+          <li><strong>EC2 → 탄력적 IP</strong>: 연결 안 된 IP 릴리스</li>
+          <li><strong>RDS → 데이터베이스</strong>: 실행 중인 DB 확인. 학습용이면 삭제</li>
+          <li><strong>VPC → NAT Gateway</strong>: available 상태면 삭제</li>
+          <li><strong>Route 53 → 호스팅 영역</strong>: 사용 안 하는 호스팅 영역 삭제</li>
+          <li><strong>다른 리전 확인</strong>: 리전 드롭다운을 도쿄·버지니아로 바꿔서 위 항목 재확인</li>
+          <li><strong>Trusted Advisor → 보안</strong>: 빨간 항목 해결</li>
+        </ol>
+
+        <div class="summary-card">
+          <div class="summary-card-title">🎉 AWS 완전 정복 가이드 완료</div>
+          <div class="summary-item"><span class="summary-term">사전 지식</span><span>OSI · DNS · TLS · RDBMS vs NoSQL</span></div>
+          <div class="summary-item"><span class="summary-term">기초</span><span>클라우드 · 가상화 · AWS 구조 · IAM</span></div>
+          <div class="summary-item"><span class="summary-term">핵심 서비스</span><span>EC2 · VPC · ELB · S3 · RDS · Route53 · CloudFront</span></div>
+          <div class="summary-item"><span class="summary-term">운영·자동화</span><span>CloudWatch · CloudTrail · CI/CD 파이프라인</span></div>
+          <div class="summary-item"><span class="summary-term">실전</span><span>3티어 웹 서비스 전체 구성 · 도메인 · HTTPS · CDN</span></div>
+          <div class="summary-item"><span class="summary-term">비용 관리</span><span>Budgets · Cost Explorer · 월간 점검 루틴</span></div>
+        </div>
+
+        <div class="callout callout-tip">
+          <span class="callout-icon">🚀</span>
+          <div class="callout-body">
+            <strong>다음 단계로</strong><br>
+            이 가이드를 마쳤다면 인프라를 직접 구성할 수 있는 수준에 올라온 겁니다. 다음 단계로는 <strong>CloudFormation(IaC)</strong>으로 인프라를 코드로 관리하거나, <strong>EKS(쿠버네티스)</strong>로 컨테이너 오케스트레이션을 배우거나, <strong>AWS SAA 자격증</strong>을 준비하는 방향이 있습니다.
+          </div>
+        </div>
+      </section>
+
+      <div class="chapter-pagination">
+        <a href="/chapters/ch10/" class="pag-link pag-prev">
+          <span class="pag-dir">← 이전 챕터</span>
+          <span class="pag-title">CH10 종합 실습</span>
+          <span class="pag-sub">실전 아키텍처 완성</span>
+        </a>
+        <a href="/" class="pag-link pag-next">
+          <span class="pag-dir">처음으로 →</span>
+          <span class="pag-title">목차로 돌아가기</span>
+          <span class="pag-sub">AWS 완전 정복 가이드</span>
+        </a>
+      </div>
+
+    </main>
+
+    <aside class="chapter-toc">
+      <div class="toc-card">
+        <div class="toc-title">이 챕터의 목차</div>
+        <ul class="toc-list">
+          <li><a href="#where" class="toc-link">01 · 요금이 새는 7가지</a></li>
+          <li><a href="#budgets" class="toc-link">02 · Budgets 예산 알림</a></li>
+          <li><a href="#explorer" class="toc-link">03 · Cost Explorer</a></li>
+          <li><a href="#trusted" class="toc-link">04 · Trusted Advisor</a></li>
+          <li><a href="#routine" class="toc-link">05 · 월간 점검 루틴</a></li>
+        </ul>
+      </div>
+    </aside>
   </div>
 </div>
-<nav class="ch-nav" id="ch-nav"></nav>
-<footer><p>aws-guide · CH11 · 비용 관리</p></footer>
-</div>
-<script src="/assets/nav.js"></script>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>AWS 완전 정복 가이드 · CH11 · 비용 관리 · 마지막 챕터</p>
+  </div>
+</footer>
+<script src="../../assets/nav.js"></script>
 </body>
 </html>

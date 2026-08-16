@@ -1,39 +1,228 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CH04 — ELB · Auto Scaling · AWS 완전 정복 가이드</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CH04 · ELB · Auto Scaling — AWS 완전 정복 가이드</title>
+  <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body>
-<nav class="topnav">
-  <div class="topnav-in">
-    <a href="/" class="topnav-home">aws-guide</a>
-    <span class="topnav-sep">/</span>
-    <span class="topnav-current">CH04 · ELB · Auto Scaling</span>
-    <div class="topnav-progress"><div class="topnav-fill" id="progress-fill"></div></div>
+
+<nav class="chapter-topnav">
+  <div class="container">
+    <div class="chapter-topnav-inner">
+      <a href="/" class="back-link"><span class="back-arrow">←</span><span>목차로</span></a>
+      <span class="chapter-nav-label">CH04 · ELB · Auto Scaling</span>
+      <div class="chapter-nav-actions">
+        <button class="complete-btn" id="completeBtn" data-chapter-id="ch04">
+          <span class="complete-icon">○</span><span class="complete-text">완료로 표시</span>
+        </button>
+      </div>
+    </div>
   </div>
 </nav>
-<div class="wrap">
-<header class="ch-hero">
-  <p class="ch-eyebrow">Chapter 04</p>
-  <div class="ch-num">04</div>
-  <h1>ELB · Auto Scaling</h1>
-</header>
-<div class="section">
-  <p class="section-label">준비 중</p>
-  <div class="callout info">
-    <span class="callout-label">작업 중인 챕터입니다</span>
-    <p>이 챕터는 현재 작성 중입니다. 곧 업데이트됩니다.</p>
+
+<section class="chapter-hero">
+  <div class="container">
+    <div class="chapter-hero-inner">
+      <div class="chapter-hero-left">
+        <div class="chapter-hero-number">
+          <span class="chapter-num-badge" style="background:var(--cat-core-h)">04</span>
+          CHAPTER 04 · 핵심 서비스
+        </div>
+        <h1 class="chapter-hero-title">ELB · Auto Scaling</h1>
+        <p class="chapter-hero-subtitle">고가용성 달성 — 서버가 죽어도 서비스는 살아있어야 한다</p>
+        <div class="chapter-hero-tags">
+          <span class="tag tag-cat-core">핵심 서비스</span>
+          <span class="tag tag-billing">시간당 과금</span>
+        </div>
+        <p class="chapter-hero-services">ALB · NLB · 대상 그룹 · 리스너 · 헬스 체크 · ASG · 시작 템플릿 · 스케일링 정책</p>
+      </div>
+      <div class="chapter-info-card">
+        <div class="info-card-title">CHAPTER INFO</div>
+        <div class="info-card-item"><span class="info-icon">⚖️</span><span>고가용성 아키텍처 핵심</span></div>
+        <div class="info-card-item"><span class="info-icon">💰</span><span>ALB 시간당 + LCU 과금</span></div>
+        <div class="info-card-item"><span class="info-icon">🔗</span><span>이전: CH03 Amazon VPC</span></div>
+        <div class="info-card-item"><span class="info-icon">🔗</span><span>다음: CH05 Amazon S3</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+  <div class="chapter-layout">
+    <main class="chapter-content">
+
+      <section class="content-section" id="why">
+        <div class="section-label">01</div>
+        <h2>왜 로드밸런서가 필요한가</h2>
+        <p>서버 한 대에 모든 트래픽을 보내면 두 가지 문제가 생깁니다. 첫째, 서버가 죽으면 서비스 전체가 죽습니다. 둘째, 트래픽이 몰리면 한 서버가 버텨야 합니다.</p>
+        <p>ELB(Elastic Load Balancer)는 <strong>여러 서버 앞에 세워서 트래픽을 나눠주는 장치</strong>입니다. 하나가 죽으면 나머지로만 보내고, 트래픽이 늘면 Auto Scaling이 서버를 더 만들어 붙입니다.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-header">⚖️ ELB + Auto Scaling 구조</div>
+          <div class="diagram-body">
+            <div style="display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap">
+              <div class="dns-node"><div class="dns-node-icon">🌐</div><span>사용자</span></div>
+              <div class="dns-arrow">→</div>
+              <div class="dns-node"><div class="dns-node-icon" style="background:var(--cat-basics-bg);border-color:var(--cat-basics-h)">⚖️</div><span>ALB<br><small>443/80</small></span></div>
+              <div class="dns-arrow">→</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div class="dns-node"><div class="dns-node-icon">🖥</div><span>EC2 #1</span></div>
+                <div class="dns-node"><div class="dns-node-icon">🖥</div><span>EC2 #2</span></div>
+                <div class="dns-node"><div class="dns-node-icon" style="background:#EBFBEE;border-color:#087F3E">🖥</div><span>EC2 #3<br><small>ASG가 추가</small></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" id="alb">
+        <div class="section-label">02</div>
+        <h2>ALB vs NLB — 언제 뭘 쓰나</h2>
+
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead><tr><th>구분</th><th>ALB (Application LB)</th><th>NLB (Network LB)</th></tr></thead>
+            <tbody>
+              <tr><td>OSI 계층</td><td>L7 (HTTP/HTTPS)</td><td>L4 (TCP/UDP)</td></tr>
+              <tr><td>라우팅 기준</td><td>URL 경로, 헤더, 호스트명</td><td>IP + 포트</td></tr>
+              <tr><td>고정 IP</td><td>없음 (DNS만)</td><td>있음 (탄력적 IP)</td></tr>
+              <tr><td>WebSocket</td><td>지원</td><td>지원</td></tr>
+              <tr><td>주 용도</td><td>웹·API 서버 (대부분)</td><td>게임·IoT·고성능 TCP</td></tr>
+              <tr><td>요금</td><td>시간당 $0.0225 + LCU</td><td>시간당 $0.0225 + NLCU</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>Spring Boot REST API 서버라면 <strong>ALB</strong>를 쓰세요. URL 경로 기반 라우팅(<code>/api/*</code> → 백엔드, <code>/*</code> → 프론트엔드)이 가능하고, HTTPS 인증서를 여기서 처리합니다.</p>
+      </section>
+
+      <section class="content-section" id="components">
+        <div class="section-label">03</div>
+        <h2>ALB 구성 요소</h2>
+
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead><tr><th>구성 요소</th><th>역할</th></tr></thead>
+            <tbody>
+              <tr><td><strong>리스너</strong></td><td>어떤 포트(80, 443)로 들어오는 트래픽을 받을지. 규칙에 따라 대상 그룹으로 전달</td></tr>
+              <tr><td><strong>규칙</strong></td><td>URL 경로, 헤더 등 조건에 따라 다른 대상 그룹으로 라우팅</td></tr>
+              <tr><td><strong>대상 그룹</strong></td><td>트래픽을 받을 EC2 인스턴스(또는 Lambda, IP) 묶음</td></tr>
+              <tr><td><strong>헬스 체크</strong></td><td>대상 그룹의 인스턴스가 살아있는지 주기적으로 확인. unhealthy면 트래픽 제외</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout-warn">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            <strong>헬스 체크 unhealthy — 가장 자주 막히는 지점</strong><br>
+            대상 그룹이 계속 unhealthy면 이 순서대로 확인하세요:<br>
+            1. 앱이 실제로 실행 중인가 (<code>systemctl status myapp</code>)<br>
+            2. 헬스 체크 경로(<code>/health</code>)가 200을 반환하는가<br>
+            3. EC2 보안 그룹이 ALB 보안 그룹에서 오는 트래픽을 허용하는가<br>
+            4. 헬스 체크 포트가 앱이 뜬 포트와 일치하는가
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" id="https">
+        <div class="section-label">실습 01</div>
+        <h2>ALB + HTTPS 설정하기</h2>
+
+        <ol style="font-size:15px;color:var(--text-2);line-height:2.2;padding-left:20px">
+          <li><strong>ACM 인증서 발급</strong>: Certificate Manager → 인증서 요청 → 도메인 입력 → DNS 검증 → Route 53에 레코드 자동 추가 → 발급 대기 (수 분)</li>
+          <li><strong>대상 그룹 생성</strong>: EC2 → 대상 그룹 → 생성 → 인스턴스 유형 → 포트 8080 → 헬스 체크 경로 <code>/health</code> → EC2 인스턴스 등록</li>
+          <li><strong>ALB 생성</strong>: EC2 → 로드 밸런서 → ALB 생성 → <strong>퍼블릭 서브넷 2개 이상 선택</strong> → ALB 전용 보안 그룹 생성(80·443 전체 허용)</li>
+          <li><strong>리스너 설정</strong>: HTTP(80) → HTTPS(443) 리다이렉트 규칙 / HTTPS(443) → 대상 그룹으로 전달 + ACM 인증서 선택</li>
+          <li><strong>EC2 보안 그룹 수정</strong>: 8080 포트 소스를 <strong>ALB 보안 그룹</strong>으로 지정 (0.0.0.0/0 제거)</li>
+          <li><strong>Route 53 연결</strong>: A 레코드 → ALIAS → ALB 선택</li>
+        </ol>
+
+        <div class="callout callout-warn">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            <strong>ALB 서브넷은 최소 2개 · 서로 다른 AZ</strong><br>
+            ALB는 고가용성을 위해 2개 이상의 AZ에 걸쳐야 합니다. 같은 AZ의 서브넷 2개를 선택하면 오류가 납니다.
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" id="asg">
+        <div class="section-label">04</div>
+        <h2>Auto Scaling — 서버가 자동으로 늘고 줄어드는 원리</h2>
+        <p>Auto Scaling Group(ASG)은 EC2 인스턴스를 자동으로 추가하거나 제거하는 서비스입니다. CPU가 70%를 넘으면 서버를 추가하고, 30% 밑으로 내려가면 줄입니다.</p>
+
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead><tr><th>구성 요소</th><th>역할</th></tr></thead>
+            <tbody>
+              <tr><td><strong>시작 템플릿</strong></td><td>새 인스턴스를 만들 때 쓸 설정 (AMI, 인스턴스 유형, 키 페어, 보안 그룹, 유저 데이터)</td></tr>
+              <tr><td><strong>최소/최대/희망 용량</strong></td><td>최소 2개, 최대 10개, 평소 2개 처럼 범위 설정</td></tr>
+              <tr><td><strong>스케일링 정책</strong></td><td>언제 늘리고 줄일지 기준 설정</td></tr>
+              <tr><td><strong>ALB 연동</strong></td><td>새로 만든 인스턴스를 자동으로 대상 그룹에 등록</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>스케일링 정책 종류</h3>
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead><tr><th>정책</th><th>작동 방식</th><th>권장 상황</th></tr></thead>
+            <tbody>
+              <tr><td>타깃 추적</td><td>CPU 70% 유지처럼 목표값을 정하면 자동 조정</td><td>대부분의 경우 (권장)</td></tr>
+              <tr><td>단계 스케일링</td><td>CPU 60~80% → 1개 추가, 80%+ → 2개 추가</td><td>세밀한 제어 필요 시</td></tr>
+              <tr><td>예약 스케일링</td><td>매주 월요일 9시 → 서버 5개로 확장</td><td>트래픽 패턴이 예측 가능할 때</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-card-title">📌 CH04 핵심 개념 요약</div>
+          <div class="summary-item"><span class="summary-term">ALB</span><span>L7 로드밸런서. URL·헤더 기반 라우팅. HTTPS 인증서 처리. 웹·API 서버에 적합</span></div>
+          <div class="summary-item"><span class="summary-term">대상 그룹</span><span>트래픽을 받을 EC2 묶음. 헬스 체크로 unhealthy 자동 제외</span></div>
+          <div class="summary-item"><span class="summary-term">헬스 체크 실패</span><span>앱 실행 여부 → 경로 200 반환 → EC2 보안 그룹 → 포트 순서로 확인</span></div>
+          <div class="summary-item"><span class="summary-term">ASG</span><span>CPU 등 지표에 따라 인스턴스 자동 추가/제거. ALB와 연동해 새 서버 자동 등록</span></div>
+          <div class="summary-item"><span class="summary-term">ALB 주의</span><span>서로 다른 AZ의 서브넷 최소 2개. EC2 보안 그룹 소스를 ALB 보안 그룹으로</span></div>
+        </div>
+      </section>
+
+      <div class="chapter-pagination">
+        <a href="/chapters/ch03/" class="pag-link pag-prev">
+          <span class="pag-dir">← 이전 챕터</span>
+          <span class="pag-title">CH03 Amazon VPC</span>
+          <span class="pag-sub">가상 네트워크 설계</span>
+        </a>
+        <a href="/chapters/ch05/" class="pag-link pag-next">
+          <span class="pag-dir">다음 챕터 →</span>
+          <span class="pag-title">CH05 Amazon S3</span>
+          <span class="pag-sub">클라우드 오브젝트 스토리지</span>
+        </a>
+      </div>
+
+    </main>
+
+    <aside class="chapter-toc">
+      <div class="toc-card">
+        <div class="toc-title">이 챕터의 목차</div>
+        <ul class="toc-list">
+          <li><a href="#why" class="toc-link">01 · 왜 로드밸런서가 필요한가</a></li>
+          <li><a href="#alb" class="toc-link">02 · ALB vs NLB</a></li>
+          <li><a href="#components" class="toc-link">03 · ALB 구성 요소</a></li>
+          <li><a href="#https" class="toc-link">실습 · ALB + HTTPS</a></li>
+          <li><a href="#asg" class="toc-link">04 · Auto Scaling</a></li>
+        </ul>
+      </div>
+    </aside>
   </div>
 </div>
-<nav class="ch-nav" id="ch-nav"></nav>
-<footer><p>aws-guide · CH04 · ELB · Auto Scaling</p></footer>
-</div>
-<script src="/assets/nav.js"></script>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>AWS 완전 정복 가이드 · CH04 · ELB · Auto Scaling</p>
+  </div>
+</footer>
+<script src="../../assets/nav.js"></script>
 </body>
 </html>

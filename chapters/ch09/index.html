@@ -1,39 +1,245 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CH09 — CI·CD 자동화 · AWS 완전 정복 가이드</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CH09 · CI/CD 자동화 — AWS 완전 정복 가이드</title>
+  <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body>
-<nav class="topnav">
-  <div class="topnav-in">
-    <a href="/" class="topnav-home">aws-guide</a>
-    <span class="topnav-sep">/</span>
-    <span class="topnav-current">CH09 · CI·CD 자동화</span>
-    <div class="topnav-progress"><div class="topnav-fill" id="progress-fill"></div></div>
+
+<nav class="chapter-topnav">
+  <div class="container">
+    <div class="chapter-topnav-inner">
+      <a href="/" class="back-link"><span class="back-arrow">←</span><span>목차로</span></a>
+      <span class="chapter-nav-label">CH09 · CI/CD 자동화</span>
+      <div class="chapter-nav-actions">
+        <button class="complete-btn" id="completeBtn" data-chapter-id="ch09">
+          <span class="complete-icon">○</span><span class="complete-text">완료로 표시</span>
+        </button>
+      </div>
+    </div>
   </div>
 </nav>
-<div class="wrap">
-<header class="ch-hero">
-  <p class="ch-eyebrow">Chapter 09</p>
-  <div class="ch-num">09</div>
-  <h1>CI·CD 자동화</h1>
-</header>
-<div class="section">
-  <p class="section-label">준비 중</p>
-  <div class="callout info">
-    <span class="callout-label">작업 중인 챕터입니다</span>
-    <p>이 챕터는 현재 작성 중입니다. 곧 업데이트됩니다.</p>
+
+<section class="chapter-hero">
+  <div class="container">
+    <div class="chapter-hero-inner">
+      <div class="chapter-hero-left">
+        <div class="chapter-hero-number">
+          <span class="chapter-num-badge" style="background:var(--cat-ops-h)">09</span>
+          CHAPTER 09 · 운영·자동화
+        </div>
+        <h1 class="chapter-hero-title">CI/CD 자동화</h1>
+        <p class="chapter-hero-subtitle">git push 한 번으로 배포까지 — 파이프라인 구축</p>
+        <div class="chapter-hero-tags">
+          <span class="tag tag-cat-ops">운영·자동화</span>
+          <span class="tag tag-neutral">Spring Boot 기준</span>
+        </div>
+        <p class="chapter-hero-services">CodePipeline · CodeBuild · CodeDeploy · buildspec.yml · appspec.yml · Systems Manager</p>
+      </div>
+      <div class="chapter-info-card">
+        <div class="info-card-title">CHAPTER INFO</div>
+        <div class="info-card-item"><span class="info-icon">🚀</span><span>배포 자동화 완성</span></div>
+        <div class="info-card-item"><span class="info-icon">💰</span><span>CodeBuild 빌드 시간당 과금</span></div>
+        <div class="info-card-item"><span class="info-icon">🔗</span><span>이전: CH08 CloudWatch</span></div>
+        <div class="info-card-item"><span class="info-icon">🔗</span><span>다음: CH10 종합 실습</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+  <div class="chapter-layout">
+    <main class="chapter-content">
+
+      <section class="content-section" id="why">
+        <div class="section-label">01</div>
+        <h2>CI/CD가 왜 필요한가</h2>
+        <p>배포를 수동으로 하면 어떤 일이 생길까요? 개발자가 서버에 SSH 접속 → jar 파일 업로드 → 서비스 재시작. 이 과정에서 실수가 생기고, 서비스가 중단되는 시간이 생깁니다. 팀원이 여러 명이면 "어떤 버전이 배포돼 있지?"를 모릅니다.</p>
+        <p>CI/CD는 코드를 push하면 자동으로 테스트·빌드·배포까지 이어지는 파이프라인입니다.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-header">🚀 CI/CD 파이프라인 흐름</div>
+          <div class="diagram-body">
+            <div class="dns-flow" style="flex-wrap:wrap">
+              <div class="dns-node"><div class="dns-node-icon">👨‍💻</div><span>git push</span></div>
+              <div class="dns-arrow">→</div>
+              <div class="dns-node"><div class="dns-node-icon" style="background:var(--cat-basics-bg)">📦</div><span>CodePipeline<br><small>트리거</small></span></div>
+              <div class="dns-arrow">→</div>
+              <div class="dns-node"><div class="dns-node-icon" style="background:var(--cat-core-bg)">🔨</div><span>CodeBuild<br><small>테스트·빌드</small></span></div>
+              <div class="dns-arrow">→</div>
+              <div class="dns-node"><div class="dns-node-icon" style="background:var(--cat-ops-bg)">🚀</div><span>CodeDeploy<br><small>EC2 배포</small></span></div>
+              <div class="dns-arrow">→</div>
+              <div class="dns-node"><div class="dns-node-icon">✅</div><span>배포 완료</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" id="codebuild">
+        <div class="section-label">02</div>
+        <h2>CodeBuild — 빌드 환경</h2>
+        <p>CodeBuild는 소스 코드를 빌드하고 테스트하는 서비스입니다. 빌드 환경(Docker 이미지)을 선택하고, <code>buildspec.yml</code> 파일에 빌드 명령을 씁니다.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-header">📄 buildspec.yml — Spring Boot 빌드</div>
+          <div class="diagram-body">
+            <pre style="background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:8px;font-size:13px;line-height:1.8;overflow-x:auto;margin:0"><code>version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto17
+
+  pre_build:
+    commands:
+      - echo "테스트 시작"
+      - ./gradlew test
+
+  build:
+    commands:
+      - echo "빌드 시작"
+      - ./gradlew bootJar
+
+  post_build:
+    commands:
+      - echo "빌드 완료"
+
+artifacts:
+  files:
+    - build/libs/*.jar
+    - appspec.yml
+    - scripts/**/*
+  discard-paths: no</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" id="codedeploy">
+        <div class="section-label">03</div>
+        <h2>CodeDeploy — EC2에 무중단 배포</h2>
+        <p>CodeDeploy는 빌드된 결과물을 EC2에 배포합니다. 배포 전략에 따라 중단 없이 롤링 배포하거나, Blue/Green 배포도 할 수 있습니다.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-header">📄 appspec.yml — 배포 명세</div>
+          <div class="diagram-body">
+            <pre style="background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:8px;font-size:13px;line-height:1.8;overflow-x:auto;margin:0"><code>version: 0.0
+os: linux
+
+files:
+  - source: /build/libs/myapp.jar
+    destination: /home/ec2-user/
+
+hooks:
+  ApplicationStop:
+    - location: scripts/stop.sh
+      timeout: 30
+
+  AfterInstall:
+    - location: scripts/start.sh
+      timeout: 60
+      runas: ec2-user
+
+  ValidateService:
+    - location: scripts/validate.sh
+      timeout: 30</code></pre>
+          </div>
+        </div>
+
+        <h3>배포 전략</h3>
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead><tr><th>전략</th><th>방식</th><th>다운타임</th></tr></thead>
+            <tbody>
+              <tr><td>In-Place</td><td>기존 인스턴스에 순차적으로 배포</td><td>있을 수 있음</td></tr>
+              <tr><td>Rolling</td><td>일부씩 교체 (ALB에서 잠시 제외 후 배포)</td><td>없음</td></tr>
+              <tr><td>Blue/Green</td><td>새 인스턴스 그룹에 배포 후 트래픽 전환</td><td>없음 (롤백 쉬움)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout-warn">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            <strong>CodeDeploy 배포 실패 시 로그 확인</strong><br>
+            <code>/opt/codedeploy-agent/deployment-root/</code> 경로에 배포 로그가 있습니다.<br>
+            또는 <code>sudo tail -f /var/log/aws/codedeploy-agent/codedeploy-agent.log</code>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" id="ssm">
+        <div class="section-label">04</div>
+        <h2>Systems Manager — 운영 자동화</h2>
+
+        <h3>Parameter Store — 설정값 중앙 관리</h3>
+        <p>DB 비밀번호, API 키 같은 설정을 Parameter Store에 저장하고 애플리케이션에서 가져옵니다. 코드에 하드코딩하거나 환경변수 파일에 담을 필요가 없습니다.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-header">🔐 Parameter Store 활용</div>
+          <div class="diagram-body">
+            <pre style="background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:8px;font-size:13px;line-height:1.8;overflow-x:auto;margin:0"><code><span style="color:#6C7086"># AWS CLI로 파라미터 저장</span>
+aws ssm put-parameter \
+  --name "/myapp/prod/db-password" \
+  --value "secure-password-here" \
+  --type "SecureString"
+
+<span style="color:#6C7086"># Spring Boot에서 가져오기 (의존성 추가 필요)</span>
+@Value("${spring.datasource.password}")
+private String dbPassword;
+<span style="color:#6C7086"># application.yml에서 SSM 참조
+# spring.datasource.password: ${ssm:/myapp/prod/db-password}</span></code></pre>
+          </div>
+        </div>
+
+        <h3>Session Manager — SSH 없이 EC2 접속</h3>
+        <p>CH02에서 배운 내용입니다. SSH 포트(22)를 열지 않아도 브라우저나 AWS CLI로 EC2에 접속할 수 있습니다. 모든 접속이 CloudTrail에 기록되고, ISMS-P 감사에 유리합니다.</p>
+
+        <div class="summary-card">
+          <div class="summary-card-title">📌 CH09 핵심 개념 요약</div>
+          <div class="summary-item"><span class="summary-term">CI/CD 파이프라인</span><span>CodePipeline(오케스트레이터) → CodeBuild(빌드) → CodeDeploy(배포)</span></div>
+          <div class="summary-item"><span class="summary-term">buildspec.yml</span><span>CodeBuild의 빌드 명령 정의. 프로젝트 루트에 위치</span></div>
+          <div class="summary-item"><span class="summary-term">appspec.yml</span><span>CodeDeploy의 배포 명세. 파일 복사 위치 + 훅 스크립트 정의</span></div>
+          <div class="summary-item"><span class="summary-term">배포 전략</span><span>Blue/Green = 무중단 + 롤백 쉬움. 프로덕션 권장</span></div>
+          <div class="summary-item"><span class="summary-term">Parameter Store</span><span>설정값 중앙 관리. DB 비밀번호·API 키를 코드 밖에서 관리</span></div>
+        </div>
+      </section>
+
+      <div class="chapter-pagination">
+        <a href="/chapters/ch08/" class="pag-link pag-prev">
+          <span class="pag-dir">← 이전 챕터</span>
+          <span class="pag-title">CH08 CloudWatch · 모니터링</span>
+          <span class="pag-sub">운영 환경 가시성 확보</span>
+        </a>
+        <a href="/chapters/ch10/" class="pag-link pag-next">
+          <span class="pag-dir">다음 챕터 →</span>
+          <span class="pag-title">CH10 종합 실습</span>
+          <span class="pag-sub">실전 아키텍처 완성</span>
+        </a>
+      </div>
+
+    </main>
+
+    <aside class="chapter-toc">
+      <div class="toc-card">
+        <div class="toc-title">이 챕터의 목차</div>
+        <ul class="toc-list">
+          <li><a href="#why" class="toc-link">01 · CI/CD가 왜 필요한가</a></li>
+          <li><a href="#codebuild" class="toc-link">02 · CodeBuild</a></li>
+          <li><a href="#codedeploy" class="toc-link">03 · CodeDeploy</a></li>
+          <li><a href="#ssm" class="toc-link">04 · Systems Manager</a></li>
+        </ul>
+      </div>
+    </aside>
   </div>
 </div>
-<nav class="ch-nav" id="ch-nav"></nav>
-<footer><p>aws-guide · CH09 · CI·CD 자동화</p></footer>
-</div>
-<script src="/assets/nav.js"></script>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>AWS 완전 정복 가이드 · CH09 · CI/CD 자동화</p>
+  </div>
+</footer>
+<script src="../../assets/nav.js"></script>
 </body>
 </html>

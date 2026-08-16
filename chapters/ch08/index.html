@@ -1,39 +1,256 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CH08 — CloudWatch · 모니터링 · AWS 완전 정복 가이드</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CH08 · CloudWatch · 모니터링 — AWS 완전 정복 가이드</title>
+  <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body>
-<nav class="topnav">
-  <div class="topnav-in">
-    <a href="/" class="topnav-home">aws-guide</a>
-    <span class="topnav-sep">/</span>
-    <span class="topnav-current">CH08 · CloudWatch · 모니터링</span>
-    <div class="topnav-progress"><div class="topnav-fill" id="progress-fill"></div></div>
+
+<nav class="chapter-topnav">
+  <div class="container">
+    <div class="chapter-topnav-inner">
+      <a href="/" class="back-link"><span class="back-arrow">←</span><span>목차로</span></a>
+      <span class="chapter-nav-label">CH08 · CloudWatch · 모니터링</span>
+      <div class="chapter-nav-actions">
+        <button class="complete-btn" id="completeBtn" data-chapter-id="ch08">
+          <span class="complete-icon">○</span><span class="complete-text">완료로 표시</span>
+        </button>
+      </div>
+    </div>
   </div>
 </nav>
-<div class="wrap">
-<header class="ch-hero">
-  <p class="ch-eyebrow">Chapter 08</p>
-  <div class="ch-num">08</div>
-  <h1>CloudWatch · 모니터링</h1>
-</header>
-<div class="section">
-  <p class="section-label">준비 중</p>
-  <div class="callout info">
-    <span class="callout-label">작업 중인 챕터입니다</span>
-    <p>이 챕터는 현재 작성 중입니다. 곧 업데이트됩니다.</p>
+
+<section class="chapter-hero">
+  <div class="container">
+    <div class="chapter-hero-inner">
+      <div class="chapter-hero-left">
+        <div class="chapter-hero-number">
+          <span class="chapter-num-badge" style="background:var(--cat-ops-h)">08</span>
+          CHAPTER 08 · 운영·자동화
+        </div>
+        <h1 class="chapter-hero-title">CloudWatch · 모니터링</h1>
+        <p class="chapter-hero-subtitle">운영 가시성 — 문제를 서비스 장애 전에 잡는 방법</p>
+        <div class="chapter-hero-tags">
+          <span class="tag tag-cat-ops">운영·자동화</span>
+          <span class="tag tag-free">기본 지표 무료</span>
+        </div>
+        <p class="chapter-hero-services">CloudWatch · 지표 · 로그 그룹 · 경보 · 대시보드 · CloudWatch Agent · CloudTrail</p>
+      </div>
+      <div class="chapter-info-card">
+        <div class="info-card-title">CHAPTER INFO</div>
+        <div class="info-card-item"><span class="info-icon">📊</span><span>운영의 눈과 귀</span></div>
+        <div class="info-card-item"><span class="info-icon">💰</span><span>기본 지표 무료 · 커스텀 지표 과금</span></div>
+        <div class="info-card-item"><span class="info-icon">🔗</span><span>이전: CH07 Route 53 · CloudFront</span></div>
+        <div class="info-card-item"><span class="info-icon">🔗</span><span>다음: CH09 CI/CD 자동화</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+  <div class="chapter-layout">
+    <main class="chapter-content">
+
+      <section class="content-section" id="what">
+        <div class="section-label">01</div>
+        <h2>CloudWatch란 — AWS의 통합 모니터링</h2>
+        <p>서버가 죽기 전에 CPU가 90%로 올라갑니다. DB 커넥션이 꽉 차기 전에 경고 신호가 있습니다. 이상 트래픽이 들어오기 전에 패턴이 보입니다. CloudWatch는 이 신호들을 수집하고, 조건이 되면 알람을 보냅니다.</p>
+
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead><tr><th>구성 요소</th><th>역할</th></tr></thead>
+            <tbody>
+              <tr><td><strong>지표(Metrics)</strong></td><td>시간에 따른 숫자 데이터. CPU 사용률, 네트워크 트래픽, DB 커넥션 수 등</td></tr>
+              <tr><td><strong>로그(Logs)</strong></td><td>애플리케이션·시스템 로그. 로그 그룹과 스트림으로 관리</td></tr>
+              <tr><td><strong>경보(Alarms)</strong></td><td>지표가 임계값을 넘으면 알림 전송 또는 Auto Scaling 동작</td></tr>
+              <tr><td><strong>대시보드</strong></td><td>여러 지표를 한눈에 보는 커스텀 화면</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="content-section" id="metrics">
+        <div class="section-label">02</div>
+        <h2>지표(Metrics) — 기본 vs 커스텀</h2>
+
+        <h3>기본 제공 지표 (무료)</h3>
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead><tr><th>서비스</th><th>주요 지표</th><th>확인 주기</th></tr></thead>
+            <tbody>
+              <tr><td>EC2</td><td>CPUUtilization, NetworkIn/Out, DiskReadOps</td><td>5분</td></tr>
+              <tr><td>RDS</td><td>DatabaseConnections, FreeStorageSpace, CPUUtilization</td><td>1분</td></tr>
+              <tr><td>ALB</td><td>RequestCount, TargetResponseTime, HTTPCode_Target_5XX_Count</td><td>1분</td></tr>
+              <tr><td>Lambda</td><td>Invocations, Duration, Errors, Throttles</td><td>1분</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout-tip">
+          <span class="callout-icon">🏨</span>
+          <div class="callout-body">
+            <strong>파르나스 인프라에서 봐야 할 지표</strong><br>
+            RDS의 <code>DatabaseConnections</code>가 max_connections에 가까워지면 HikariCP 커넥션 풀 exhaustion 직전입니다. EC2의 <code>CPUCreditBalance</code>가 0에 가까우면 t타입 버스트 한계입니다. 이 두 지표에 경보를 걸어두면 장애 전에 감지할 수 있습니다.
+          </div>
+        </div>
+
+        <h3>커스텀 지표 — EC2 메모리는 기본 제공 안 됨</h3>
+        <p>EC2의 <strong>메모리 사용률은 기본 지표에 없습니다.</strong> CloudWatch Agent를 설치해야 수집됩니다.</p>
+        <div class="diagram-card">
+          <div class="diagram-header">📦 CloudWatch Agent 설치</div>
+          <div class="diagram-body">
+            <pre style="background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:8px;font-size:13px;line-height:1.8;overflow-x:auto;margin:0"><code><span style="color:#6C7086"># Amazon Linux 2023</span>
+sudo dnf install amazon-cloudwatch-agent -y
+
+<span style="color:#6C7086"># 설정 마법사 실행</span>
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-config-wizard
+
+<span style="color:#6C7086"># 에이전트 시작</span>
+sudo systemctl enable amazon-cloudwatch-agent
+sudo systemctl start amazon-cloudwatch-agent</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" id="logs">
+        <div class="section-label">03</div>
+        <h2>CloudWatch Logs — Spring Boot 로그 수집</h2>
+        <p>EC2에 남는 로그를 CloudWatch로 보내면 서버가 죽어도 로그가 남고, 여러 서버의 로그를 한 곳에서 볼 수 있습니다.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-header">📝 Spring Boot → CloudWatch Logs 설정</div>
+          <div class="diagram-body">
+            <pre style="background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:8px;font-size:13px;line-height:1.8;overflow-x:auto;margin:0"><code><span style="color:#6C7086"># CloudWatch Agent 설정 파일 — 로그 수집 부분</span>
+{
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {
+            "file_path": "/var/log/myapp/*.log",
+            "log_group_name": "/my-service/application",
+            "log_stream_name": "{instance_id}",
+            "retention_in_days": 30
+          }
+        ]
+      }
+    }
+  }
+}</code></pre>
+          </div>
+        </div>
+
+        <h3>로그 인사이트 — 로그에서 쿼리하기</h3>
+        <p>CloudWatch Logs Insights로 로그에 SQL 비슷한 쿼리를 날릴 수 있습니다.</p>
+        <div class="diagram-card">
+          <div class="diagram-header">🔍 로그 인사이트 쿼리 예시</div>
+          <div class="diagram-body">
+            <pre style="background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:8px;font-size:13px;line-height:1.8;overflow-x:auto;margin:0"><code><span style="color:#6C7086"># 최근 1시간 ERROR 로그 검색</span>
+fields @timestamp, @message
+| filter @message like /ERROR/
+| sort @timestamp desc
+| limit 50
+
+<span style="color:#6C7086"># 요청별 응답 시간 평균</span>
+fields @timestamp, @message
+| parse @message "duration=*ms" as duration
+| stats avg(duration) by bin(5m)</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" id="alarm">
+        <div class="section-label">04</div>
+        <h2>경보(Alarms) — 자동 알림과 Auto Scaling 연동</h2>
+
+        <ol style="font-size:15px;color:var(--text-2);line-height:2.2;padding-left:20px">
+          <li>CloudWatch → 경보 → 경보 생성</li>
+          <li>지표 선택 (EC2 → CPUUtilization → 특정 인스턴스 선택)</li>
+          <li>조건 설정: 평균 > 70% for 2개 연속 1분 기간</li>
+          <li>알림 작업: SNS 주제 → 이메일 전송</li>
+          <li>경보 이름: <code>EC2-CPU-High</code></li>
+        </ol>
+
+        <div class="callout callout-tip">
+          <span class="callout-icon">💡</span>
+          <div class="callout-body">
+            <strong>경보 → Auto Scaling 연동</strong><br>
+            CPU 경보가 울리면 Auto Scaling 정책을 실행하도록 연동할 수 있습니다. "CPU 70% 초과 시 → 인스턴스 1개 추가" 같은 식으로요. ASG 생성 시 타깃 추적 정책을 쓰면 경보와 스케일링이 자동으로 연결됩니다.
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" id="cloudtrail">
+        <div class="section-label">05</div>
+        <h2>CloudTrail — 누가 무엇을 했는가</h2>
+        <p>CloudTrail은 AWS 계정의 <strong>API 호출 이력을 전부 기록</strong>합니다. "언제 누가 어떤 리소스를 만들거나 삭제했는가"를 추적할 수 있습니다.</p>
+
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead><tr><th>구분</th><th>CloudWatch</th><th>CloudTrail</th></tr></thead>
+            <tbody>
+              <tr><td>목적</td><td>리소스 상태 모니터링 (성능, 가용성)</td><td>API 호출 감사 (누가 무엇을 했는가)</td></tr>
+              <tr><td>데이터</td><td>지표, 로그</td><td>API 이벤트 로그</td></tr>
+              <tr><td>ISMS-P 관련</td><td>시스템 가용성 증빙</td><td>접근 이력 감사 증빙</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout-tip">
+          <span class="callout-icon">🏨</span>
+          <div class="callout-body">
+            <strong>ISMS-P에서 CloudTrail</strong><br>
+            ISMS-P 인증에서 "AWS 관리 콘솔 접속 및 작업 이력"을 요구합니다. CloudTrail을 활성화하고 S3에 90일 이상 보관하면 이 요건을 충족할 수 있습니다. Trail 하나를 만들어 모든 리전에 적용하는 멀티리전 Trail이 권장됩니다.
+          </div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-card-title">📌 CH08 핵심 개념 요약</div>
+          <div class="summary-item"><span class="summary-term">CloudWatch 4요소</span><span>지표(Metrics) · 로그(Logs) · 경보(Alarms) · 대시보드</span></div>
+          <div class="summary-item"><span class="summary-term">EC2 메모리 지표</span><span>기본 제공 안 됨 → CloudWatch Agent 설치 필요</span></div>
+          <div class="summary-item"><span class="summary-term">중요 경보 대상</span><span>RDS DatabaseConnections · EC2 CPUCreditBalance · ALB 5XX 에러율</span></div>
+          <div class="summary-item"><span class="summary-term">로그 보존</span><span>로그 그룹에 보존 기간 설정 필수. 무한 보존 시 비용 계속 누적</span></div>
+          <div class="summary-item"><span class="summary-term">CloudTrail</span><span>API 호출 감사 로그. ISMS-P 접근 이력 증빙. 멀티리전 Trail 권장</span></div>
+        </div>
+      </section>
+
+      <div class="chapter-pagination">
+        <a href="/chapters/ch07/" class="pag-link pag-prev">
+          <span class="pag-dir">← 이전 챕터</span>
+          <span class="pag-title">CH07 Route 53 · CloudFront</span>
+          <span class="pag-sub">DNS와 CDN 서비스</span>
+        </a>
+        <a href="/chapters/ch09/" class="pag-link pag-next">
+          <span class="pag-dir">다음 챕터 →</span>
+          <span class="pag-title">CH09 CI/CD 자동화</span>
+          <span class="pag-sub">배포 파이프라인 구축</span>
+        </a>
+      </div>
+
+    </main>
+
+    <aside class="chapter-toc">
+      <div class="toc-card">
+        <div class="toc-title">이 챕터의 목차</div>
+        <ul class="toc-list">
+          <li><a href="#what" class="toc-link">01 · CloudWatch란</a></li>
+          <li><a href="#metrics" class="toc-link">02 · 지표 · 커스텀 지표</a></li>
+          <li><a href="#logs" class="toc-link">03 · 로그 수집</a></li>
+          <li><a href="#alarm" class="toc-link">04 · 경보 설정</a></li>
+          <li><a href="#cloudtrail" class="toc-link">05 · CloudTrail</a></li>
+        </ul>
+      </div>
+    </aside>
   </div>
 </div>
-<nav class="ch-nav" id="ch-nav"></nav>
-<footer><p>aws-guide · CH08 · CloudWatch · 모니터링</p></footer>
-</div>
-<script src="/assets/nav.js"></script>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>AWS 완전 정복 가이드 · CH08 · CloudWatch · 모니터링</p>
+  </div>
+</footer>
+<script src="../../assets/nav.js"></script>
 </body>
 </html>

@@ -1,39 +1,262 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CH10 — 종합 실습 — 실전 아키텍처 · AWS 완전 정복 가이드</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CH10 · 종합 실습 — AWS 완전 정복 가이드</title>
+  <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body>
-<nav class="topnav">
-  <div class="topnav-in">
-    <a href="/" class="topnav-home">aws-guide</a>
-    <span class="topnav-sep">/</span>
-    <span class="topnav-current">CH10 · 종합 실습 — 실전 아키텍처</span>
-    <div class="topnav-progress"><div class="topnav-fill" id="progress-fill"></div></div>
+
+<nav class="chapter-topnav">
+  <div class="container">
+    <div class="chapter-topnav-inner">
+      <a href="/" class="back-link"><span class="back-arrow">←</span><span>목차로</span></a>
+      <span class="chapter-nav-label">CH10 · 종합 실습</span>
+      <div class="chapter-nav-actions">
+        <button class="complete-btn" id="completeBtn" data-chapter-id="ch10">
+          <span class="complete-icon">○</span><span class="complete-text">완료로 표시</span>
+        </button>
+      </div>
+    </div>
   </div>
 </nav>
-<div class="wrap">
-<header class="ch-hero">
-  <p class="ch-eyebrow">Chapter 10</p>
-  <div class="ch-num">10</div>
-  <h1>종합 실습 — 실전 아키텍처</h1>
-</header>
-<div class="section">
-  <p class="section-label">준비 중</p>
-  <div class="callout info">
-    <span class="callout-label">작업 중인 챕터입니다</span>
-    <p>이 챕터는 현재 작성 중입니다. 곧 업데이트됩니다.</p>
+
+<section class="chapter-hero">
+  <div class="container">
+    <div class="chapter-hero-inner">
+      <div class="chapter-hero-left">
+        <div class="chapter-hero-number">
+          <span class="chapter-num-badge" style="background:var(--cat-adv-h)">10</span>
+          CHAPTER 10 · 실전·심화
+        </div>
+        <h1 class="chapter-hero-title">종합 실습</h1>
+        <p class="chapter-hero-subtitle">실전 아키텍처 — 전부 이어 붙이기</p>
+        <div class="chapter-hero-tags">
+          <span class="tag tag-cat-adv">실전·심화</span>
+          <span class="tag tag-danger">⚠ 동시 가동 — 당일 정리 필수</span>
+          <span class="tag tag-info">최종 목표</span>
+        </div>
+        <p class="chapter-hero-services">VPC · EC2 · ALB · ASG · RDS · S3 · CloudFront · Route 53 · CloudWatch · CI/CD</p>
+      </div>
+      <div class="chapter-info-card">
+        <div class="info-card-title">CHAPTER INFO</div>
+        <div class="info-card-item"><span class="info-icon">🏗</span><span>전체 서비스 통합 구성</span></div>
+        <div class="info-card-item"><span class="info-icon">💰</span><span>동시 가동 시 하루 $3~10</span></div>
+        <div class="info-card-item"><span class="info-icon">⚠️</span><span>당일 실습 후 전체 삭제 필수</span></div>
+        <div class="info-card-item"><span class="info-icon">🔗</span><span>이전: CH09 CI/CD 자동화</span></div>
+        <div class="info-card-item"><span class="info-icon">🔗</span><span>다음: CH11 비용 관리</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+  <div class="chapter-layout">
+    <main class="chapter-content">
+
+      <section class="content-section" id="arch">
+        <div class="section-label">01</div>
+        <h2>목표 아키텍처</h2>
+        <p>CH02~CH09에서 배운 모든 서비스를 하나의 서비스로 연결합니다. 사용자가 도메인에 접속하면 CloudFront → ALB → EC2(Spring Boot) → RDS로 이어지는 완전한 3티어 웹 서비스입니다.</p>
+
+        <div class="diagram-card">
+          <div class="diagram-header">🏗 최종 아키텍처 전체 구성</div>
+          <div class="diagram-body">
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <!-- 사용자 -->
+              <div style="text-align:center">
+                <div style="display:inline-flex;align-items:center;gap:8px;background:var(--surface-2);border-radius:8px;padding:8px 16px;font-size:13px">
+                  🌐 사용자 → <strong>https://www.example.com</strong>
+                </div>
+              </div>
+              <div style="text-align:center;color:var(--text-4)">↓ Route 53 ALIAS</div>
+
+              <!-- CloudFront -->
+              <div style="background:var(--cat-adv-bg);border-radius:8px;padding:12px;text-align:center">
+                <div style="font-size:12px;font-weight:700;color:var(--cat-adv-text)">☁ CloudFront</div>
+                <div style="font-size:11px;color:var(--text-3)">정적 파일 캐싱 · OAC · HTTPS</div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div style="text-align:center;color:var(--text-4);font-size:12px">↙ /api/* 제외<br>정적 파일</div>
+                <div style="text-align:center;color:var(--text-4);font-size:12px">↘ /api/*<br>ALB 오리진</div>
+              </div>
+
+              <!-- S3 / ALB -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div style="background:var(--cat-ops-bg);border-radius:8px;padding:12px;text-align:center">
+                  <div style="font-size:12px;font-weight:700;color:var(--cat-ops-text)">🗄 S3</div>
+                  <div style="font-size:11px;color:var(--text-3)">React 빌드 결과물</div>
+                </div>
+                <div style="background:var(--cat-basics-bg);border-radius:8px;padding:12px;text-align:center">
+                  <div style="font-size:12px;font-weight:700;color:var(--cat-basics-text)">⚖️ ALB</div>
+                  <div style="font-size:11px;color:var(--text-3)">HTTPS · 헬스 체크</div>
+                </div>
+              </div>
+              <div style="text-align:center;color:var(--text-4)">↓ ALB → EC2</div>
+
+              <!-- VPC -->
+              <div style="border:2px dashed var(--border);border-radius:12px;padding:12px">
+                <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:8px">🌐 VPC</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                  <div style="background:var(--cat-basics-bg);border-radius:8px;padding:10px">
+                    <div style="font-size:10px;font-weight:700;color:var(--cat-basics-text);margin-bottom:4px">퍼블릭 서브넷</div>
+                    <div style="font-size:11px;color:var(--text-2)">ALB<br>NAT Gateway</div>
+                  </div>
+                  <div style="background:var(--surface-2);border-radius:8px;padding:10px">
+                    <div style="font-size:10px;font-weight:700;color:var(--text-2);margin-bottom:4px">프라이빗 서브넷</div>
+                    <div style="font-size:11px;color:var(--text-2)">EC2 (Spring Boot)<br>RDS (MySQL)</div>
+                  </div>
+                </div>
+              </div>
+              <div style="text-align:center;color:var(--text-4)">↓ CloudWatch 모니터링 · CodePipeline CI/CD</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-danger">
+          <span class="callout-icon">💰</span>
+          <div class="callout-body">
+            <strong>비용 추산 — 실습 전에 반드시 확인</strong><br>
+            ALB: 시간당 $0.0225 · EC2 t3.medium: $0.052 · RDS db.t4g.micro: $0.018 · NAT Gateway: $0.059<br>
+            <strong>동시 가동 1시간 기준 약 $0.15~0.20, 하루 방치 시 $3~5+</strong><br>
+            반드시 당일 실습 완료 후 전체 삭제하세요.
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" id="step1">
+        <div class="section-label">실습 01</div>
+        <h2>네트워크 기반 구성</h2>
+
+        <ol style="font-size:15px;color:var(--text-2);line-height:2.2;padding-left:20px">
+          <li><strong>VPC 생성</strong>: CIDR <code>10.0.0.0/16</code></li>
+          <li><strong>퍼블릭 서브넷 2개</strong>: AZ 2a(<code>10.0.1.0/24</code>), AZ 2c(<code>10.0.3.0/24</code>)</li>
+          <li><strong>프라이빗 서브넷 2개</strong>: AZ 2a(<code>10.0.2.0/24</code>), AZ 2c(<code>10.0.4.0/24</code>)</li>
+          <li><strong>IGW 생성 및 연결</strong></li>
+          <li><strong>퍼블릭 라우팅 테이블</strong>: <code>0.0.0.0/0 → IGW</code></li>
+          <li><strong>보안 그룹 3개</strong>: ALB용(80·443 전체), EC2용(8080을 ALB SG에서만), RDS용(3306을 EC2 SG에서만)</li>
+        </ol>
+      </section>
+
+      <section class="content-section" id="step2">
+        <div class="section-label">실습 02</div>
+        <h2>백엔드 배포 (Spring Boot)</h2>
+
+        <ol style="font-size:15px;color:var(--text-2);line-height:2.2;padding-left:20px">
+          <li><strong>RDS 생성</strong>: 프라이빗 서브넷 · Multi-AZ 비활성 · 백업 보존 0일</li>
+          <li><strong>EC2 생성</strong>: 프라이빗 서브넷 · IAM 역할(S3·SSM 권한) · EC2용 보안 그룹</li>
+          <li><strong>Session Manager로 EC2 접속</strong>: SSH 포트 없이 접속</li>
+          <li><strong>Java 설치 · Spring Boot 배포</strong>: application.yml에 RDS 연결 정보 환경변수로</li>
+          <li><strong>ALB 생성</strong>: 퍼블릭 서브넷 2개 · ACM 인증서 · 대상 그룹에 EC2 등록</li>
+          <li><strong>Route 53</strong>: <code>api.example.com → ALB ALIAS</code></li>
+          <li><strong>HTTPS 확인</strong>: <code>curl https://api.example.com/health</code></li>
+        </ol>
+      </section>
+
+      <section class="content-section" id="step3">
+        <div class="section-label">실습 03</div>
+        <h2>프론트엔드 배포 (S3 + CloudFront)</h2>
+
+        <ol style="font-size:15px;color:var(--text-2);line-height:2.2;padding-left:20px">
+          <li><strong>S3 버킷 생성</strong>: 퍼블릭 액세스 차단 유지</li>
+          <li><strong>빌드 및 업로드</strong>: <code>npm run build</code> → dist/ 업로드</li>
+          <li><strong>us-east-1 ACM 인증서 발급</strong>: <code>www.example.com</code></li>
+          <li><strong>CloudFront 배포</strong>: S3 오리진 · OAC · SPA 오류 처리(403/404 → index.html)</li>
+          <li><strong>Route 53</strong>: <code>www.example.com → CloudFront ALIAS</code></li>
+          <li><strong>CORS 설정</strong>: Spring Boot에서 <code>https://www.example.com</code> 허용</li>
+          <li><strong>전체 기능 확인</strong>: 로그인 · 파일 업로드 · API 호출</li>
+        </ol>
+      </section>
+
+      <section class="content-section" id="step4">
+        <div class="section-label">실습 04</div>
+        <h2>운영 연결 (CloudWatch + CI/CD)</h2>
+
+        <ol style="font-size:15px;color:var(--text-2);line-height:2.2;padding-left:20px">
+          <li><strong>CloudWatch 경보</strong>: EC2 CPU 70% · RDS 커넥션 80% · ALB 5XX 에러</li>
+          <li><strong>SNS 이메일 알림</strong>: 경보 시 이메일 수신</li>
+          <li><strong>CodePipeline 구성</strong>: GitHub → CodeBuild → CodeDeploy → EC2</li>
+          <li><strong>테스트 배포</strong>: 코드 수정 push → 자동 배포 확인</li>
+        </ol>
+      </section>
+
+      <section class="content-section" id="cleanup">
+        <div class="section-label">⚠️ 정리</div>
+        <h2>전체 정리 — 역순 삭제</h2>
+
+        <div class="callout callout-danger">
+          <span class="callout-icon">🗑</span>
+          <div class="callout-body">
+            <strong>아래 순서대로 삭제하세요 — 순서가 틀리면 오류 납니다</strong>
+            <ol style="margin:10px 0 0;padding-left:18px;line-height:2.2">
+              <li>CodePipeline · CodeBuild · CodeDeploy 삭제</li>
+              <li>CloudWatch 경보 · 대시보드 삭제</li>
+              <li>CloudFront 배포 비활성화 후 삭제 (5~15분 소요)</li>
+              <li>ALB · 대상 그룹 삭제</li>
+              <li>EC2 인스턴스 종료(Terminate)</li>
+              <li>RDS 인스턴스 삭제 (스냅샷 생성 체크 해제)</li>
+              <li>RDS 클러스터 삭제 (Aurora인 경우)</li>
+              <li>NAT Gateway 삭제 (있는 경우)</li>
+              <li>탄력적 IP 릴리스</li>
+              <li>S3 버킷 내용 비우기 → 버킷 삭제</li>
+              <li>VPC 삭제 (서브넷·IGW·보안 그룹 자동 삭제)</li>
+              <li>ACM 인증서 삭제 (서울 · 버지니아 둘 다)</li>
+              <li>Route 53 레코드 삭제 → 호스팅 영역 삭제</li>
+              <li>EBS 볼륨 · 스냅샷 남은 것 확인 후 삭제</li>
+              <li>Cost Explorer에서 다음날 잔여 과금 확인</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-card-title">🎉 종합 실습 완료 — 달성한 것들</div>
+          <div class="summary-item"><span class="summary-term">네트워크</span><span>VPC · 퍼블릭/프라이빗 서브넷 · 보안 그룹 3계층</span></div>
+          <div class="summary-item"><span class="summary-term">백엔드</span><span>EC2 + Spring Boot + RDS + S3 파일 업로드</span></div>
+          <div class="summary-item"><span class="summary-term">HTTPS</span><span>ALB + ACM 인증서 + HTTP→HTTPS 리다이렉트</span></div>
+          <div class="summary-item"><span class="summary-term">프론트엔드</span><span>S3 + CloudFront + OAC + SPA 라우팅</span></div>
+          <div class="summary-item"><span class="summary-term">도메인</span><span>Route 53 + www·api 서브도메인 분리</span></div>
+          <div class="summary-item"><span class="summary-term">운영</span><span>CloudWatch 경보 + SNS 알림</span></div>
+          <div class="summary-item"><span class="summary-term">자동화</span><span>CI/CD 파이프라인으로 git push → 자동 배포</span></div>
+        </div>
+      </section>
+
+      <div class="chapter-pagination">
+        <a href="/chapters/ch09/" class="pag-link pag-prev">
+          <span class="pag-dir">← 이전 챕터</span>
+          <span class="pag-title">CH09 CI/CD 자동화</span>
+          <span class="pag-sub">배포 파이프라인 구축</span>
+        </a>
+        <a href="/chapters/ch11/" class="pag-link pag-next">
+          <span class="pag-dir">다음 챕터 →</span>
+          <span class="pag-title">CH11 비용 관리</span>
+          <span class="pag-sub">AWS 요금 최적화</span>
+        </a>
+      </div>
+
+    </main>
+
+    <aside class="chapter-toc">
+      <div class="toc-card">
+        <div class="toc-title">이 챕터의 목차</div>
+        <ul class="toc-list">
+          <li><a href="#arch" class="toc-link">01 · 목표 아키텍처</a></li>
+          <li><a href="#step1" class="toc-link">실습 01 · 네트워크 구성</a></li>
+          <li><a href="#step2" class="toc-link">실습 02 · 백엔드 배포</a></li>
+          <li><a href="#step3" class="toc-link">실습 03 · 프론트엔드 배포</a></li>
+          <li><a href="#step4" class="toc-link">실습 04 · 운영 연결</a></li>
+          <li><a href="#cleanup" class="toc-link">⚠️ 전체 정리 순서</a></li>
+        </ul>
+      </div>
+    </aside>
   </div>
 </div>
-<nav class="ch-nav" id="ch-nav"></nav>
-<footer><p>aws-guide · CH10 · 종합 실습 — 실전 아키텍처</p></footer>
-</div>
-<script src="/assets/nav.js"></script>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>AWS 완전 정복 가이드 · CH10 · 종합 실습</p>
+  </div>
+</footer>
+<script src="../../assets/nav.js"></script>
 </body>
 </html>
