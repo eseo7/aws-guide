@@ -54,17 +54,16 @@
 
   /* ── Chapter complete button ────────────────────────── */
   function initCompleteBtn() {
-    /* data-chapter-id 또는 data-chapter 둘 다 지원 */
-    var btn = document.querySelector('.complete-btn[data-chapter-id], .complete-btn[data-chapter]');
+    var btn = document.querySelector('.complete-btn[data-chapter]');
     if (!btn) return;
-    var chId = btn.dataset.chapterId || btn.dataset.chapter;
+    var chId = btn.dataset.chapter;
 
     function syncBtn(completed) {
       if (completed.indexOf(chId) !== -1) {
-        btn.innerHTML = '<span class="complete-icon">✓</span><span class="complete-text">완료됨</span>';
+        btn.textContent = '✓ 완료됨';
         btn.classList.add('is-completed');
       } else {
-        btn.innerHTML = '<span class="complete-icon">○</span><span class="complete-text">완료로 표시</span>';
+        btn.textContent = '완료로 표시';
         btn.classList.remove('is-completed');
       }
     }
