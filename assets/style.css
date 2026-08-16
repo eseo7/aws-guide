@@ -1001,27 +1001,121 @@ table { border-collapse: collapse; width: 100%; }
 .pag-sub { font-size: 12px; color: var(--text-3); }
 
 /* ─── Responsive ────────────────────────────────────────── */
+
+/* 전체 가로 스크롤 방지 */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 @media (max-width: 900px) {
   .chapter-hero-inner { grid-template-columns: 1fr; }
   .chapter-info-card { display: none; }
   .chapter-layout { grid-template-columns: 1fr; }
   .chapter-toc { display: none; }
 }
+
 @media (max-width: 640px) {
   :root { --gutter: 16px; }
+
+  /* 컨테이너 */
+  .container { padding: 0 16px; }
+
+  /* Hero */
   .hero { padding: 40px 0 36px; }
   .hero-badge { font-size: 11px; }
   .hero-desc { font-size: 15px; }
-  .stats-row { gap: 0; }
+  .stats-row { gap: 0; flex-wrap: wrap; }
   .stat { padding: 12px 20px 12px 0; margin-right: 20px; }
   .stat-num { font-size: 26px; }
   .header-progress { display: none; }
+
+  /* 카드 그리드 */
   .chapter-grid { grid-template-columns: 1fr; }
   .chapter-pagination { grid-template-columns: 1fr; }
+
+  /* OSI 다이어그램 */
   .osi-layer { grid-template-columns: 24px 1fr 1fr; }
   .osi-aws { display: none; }
+
+  /* 챕터 Hero */
+  .chapter-hero { padding: 32px 0 28px; }
   .chapter-hero-title { font-size: 22px; }
   .chapter-hero-subtitle { font-size: 15px; }
+  .chapter-hero-tags { flex-wrap: wrap; }
+
+  /* 상단 nav */
+  .chapter-topnav-inner { gap: 8px; }
+  .chapter-nav-label {
+    display: none; /* 모바일에서 중간 라벨 숨기기 */
+  }
+
+  /* 본문 */
   .content-section h2 { font-size: 20px; }
   .content-section h3 { font-size: 16px; }
+  .content-section { margin-bottom: 40px; }
+
+  /* 코드 블록 — 핵심 모바일 오버플로 원인 */
+  pre {
+    overflow-x: auto;
+    max-width: 100%;
+    font-size: 11.5px !important;
+    padding: 14px 14px !important;
+    border-radius: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 다이어그램 카드 */
+  .diagram-card { margin: 16px 0; }
+  .diagram-body {
+    padding: 14px 12px !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .diagram-body > div[style*="grid"] {
+    min-width: 0;
+  }
+
+  /* DNS 플로우 */
+  .dns-flow {
+    gap: 6px;
+    padding: 12px 0;
+  }
+  .dns-node { font-size: 11px; }
+  .dns-node-icon { width: 40px; height: 40px; font-size: 18px; }
+  .dns-arrow { font-size: 14px; }
+
+  /* 테이블 — 가로 스크롤 허용 */
+  .content-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    display: block;
+    width: 100%;
+  }
+  .content-table { min-width: 480px; font-size: 13px; }
+
+  /* Callout */
+  .callout { padding: 12px 14px; font-size: 13px; }
+
+  /* 페이지네이션 */
+  .chapter-pagination {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .pag-link { padding: 14px 16px; }
+
+  /* Summary card */
+  .summary-card { padding: 16px; }
+  .summary-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .summary-term { min-width: unset; }
+
+  /* Info card (챕터 hero 우측) — 모바일에서 숨김 */
+  .chapter-info-card { display: none; }
+
+  /* 완료 버튼 */
+  .complete-btn { padding: 6px 12px; font-size: 12px; }
 }
