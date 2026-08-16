@@ -14,7 +14,7 @@
       <a href="/" class="back-link"><span class="back-arrow">←</span><span>목차로</span></a>
       <span class="chapter-nav-label">CH03 · Amazon VPC</span>
       <div class="chapter-nav-actions">
-        <button class="complete-btn" id="completeBtn" data-chapter-id="ch03">
+        <button class="complete-btn" data-chapter-id="ch03">
           <span class="complete-icon">○</span><span class="complete-text">완료로 표시</span>
         </button>
       </div>
@@ -26,25 +26,32 @@
   <div class="container">
     <div class="chapter-hero-inner">
       <div class="chapter-hero-left">
-        <div class="chapter-hero-number">
-          <span class="chapter-num-badge" style="background:var(--cat-core-h)">03</span>
-          CHAPTER 03 · 핵심 서비스
+        <div class="chapter-num-badge" style="background: var(--cat-core-h)">CHAPTER 03</div>
+        <h1 class="chapter-title">Amazon VPC</h1>
+        <p class="chapter-subtitle">가상 네트워크 설계</p>
+        <div class="chapter-tags">
+          <span class="tag tag-core">핵심 서비스</span>
+          <span class="tag tag-pay">NAT 과금</span>
         </div>
-        <h1 class="chapter-hero-title">Amazon VPC</h1>
-        <p class="chapter-hero-subtitle">내 전용 네트워크를 AWS 위에 그리기</p>
-        <div class="chapter-hero-tags">
-          <span class="tag tag-cat-core">핵심 서비스</span>
-          <span class="tag tag-billing">NAT 시간당 과금</span>
-        </div>
-        <p class="chapter-hero-services">VPC · 서브넷 · 라우팅 테이블 · IGW · NAT Gateway · 보안 그룹 · NACL · Bastion Host · VPC Endpoint</p>
+        <p class="chapter-desc">VPC는 AWS 위에 나만의 가상 데이터센터를 만드는 서비스입니다. EC2, RDS 등 모든 리소스는 VPC 안에서 동작합니다. 네트워크 구조를 직접 설계하고 인터넷 연결과 보안을 제어할 수 있습니다.</p>
+        <div class="chapter-service-list">VPC · 서브넷 · 라우팅 · IGW · NAT · NACL · Bastion Host</div>
       </div>
       <div class="chapter-info-card">
         <div class="info-card-title">CHAPTER INFO</div>
-        <div class="info-card-item"><span class="info-icon">🌐</span><span>네트워크 설계 핵심</span></div>
-        <div class="info-card-item"><span class="info-icon">💰</span><span>NAT Gateway 시간당 과금</span></div>
-        <div class="info-card-item"><span class="info-icon">⚠️</span><span>모든 AWS 서비스의 토대</span></div>
-        <div class="info-card-item"><span class="info-icon">🔗</span><span>이전: CH02 Amazon EC2</span></div>
-        <div class="info-card-item"><span class="info-icon">🔗</span><span>다음: CH04 ELB · Auto Scaling</span></div>
+        <dl class="info-card-list">
+          <div class="info-card-row">
+            <dt>카테고리</dt><dd>핵심 서비스</dd>
+          </div>
+          <div class="info-card-row">
+            <dt>과금 주의</dt><dd>NAT 게이트웨이 (시간당)</dd>
+          </div>
+          <div class="info-card-row">
+            <dt>핵심 개념</dt><dd>8가지</dd>
+          </div>
+          <div class="info-card-row">
+            <dt>선수 챕터</dt><dd>CH02 EC2</dd>
+          </div>
+        </dl>
       </div>
     </div>
   </div>
@@ -54,289 +61,597 @@
   <div class="chapter-layout">
     <main class="chapter-content">
 
-      <section class="content-section" id="what">
-        <div class="section-label">01</div>
-        <h2>VPC란 — 내 전용 네트워크</h2>
-        <p>VPC(Virtual Private Cloud)는 <strong>AWS 위에 내 전용 네트워크를 만드는 서비스</strong>입니다. 마치 회사 사무실에 전용 LAN을 깔듯, AWS 데이터센터 안에 나만의 가상 네트워크 대역을 그립니다.</p>
-        <p>EC2, RDS, Lambda 등 대부분의 AWS 서비스는 VPC 안에서 동작합니다. VPC를 이해하면 "왜 EC2에서 RDS로 연결이 안 되는지", "왜 프라이빗 서브넷의 서버가 인터넷에 못 나가는지"가 바로 이해됩니다.</p>
+      <!-- 01. VPC란 -->
+      <section class="content-section" id="s1">
+        <div class="section-eyebrow">01</div>
+        <h2>VPC란 무엇인가</h2>
+        <p>물리적인 데이터센터에는 서버실이 있고, 내부 네트워크와 외부 인터넷을 분리합니다. AWS에서는 이 역할을 <strong>VPC(Virtual Private Cloud)</strong>가 합니다.</p>
+        <p>VPC는 AWS 계정 안에서 논리적으로 격리된 가상 네트워크 공간입니다. VPC를 만들면 IP 주소 범위(CIDR)를 직접 정하고, 그 안에서 서브넷·라우팅·보안을 모두 직접 제어할 수 있습니다.</p>
 
         <div class="callout callout-tip">
-          <span class="callout-icon">🏢</span>
+          <div class="callout-icon">💡</div>
           <div class="callout-body">
-            <strong>비유하면</strong><br>
-            VPC = 회사 건물 전체 네트워크 대역<br>
-            서브넷 = 층별 네트워크 (1층=퍼블릭, 지하=프라이빗)<br>
-            라우팅 테이블 = 엘리베이터 안내판 (어디로 갈 수 있는지)<br>
-            인터넷 게이트웨이 = 건물 정문<br>
-            NAT Gateway = 내부에서 외부로만 나갈 수 있는 쪽문
-          </div>
-        </div>
-      </section>
-
-      <section class="content-section" id="cidr">
-        <div class="section-label">02</div>
-        <h2>사설망과 CIDR — /16, /24가 뭔가</h2>
-        <p>VPC를 만들 때 IP 대역을 지정합니다. 예: <code>10.0.0.0/16</code>. 이 표기법을 CIDR(Classless Inter-Domain Routing)이라 합니다.</p>
-
-        <div class="diagram-card">
-          <div class="diagram-header">📖 CIDR 표기법 이해</div>
-          <div class="diagram-body">
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-              <div style="background:var(--cat-basics-bg);border-radius:8px;padding:14px;text-align:center">
-                <div style="font-size:18px;font-weight:800;color:var(--cat-basics-text);margin-bottom:6px">10.0.0.0<span style="color:var(--cat-core-h)">/16</span></div>
-                <div style="font-size:12px;color:var(--text-2)">65,536개 IP<br>10.0.0.0 ~ 10.0.255.255<br>VPC 크기로 적합</div>
-              </div>
-              <div style="background:var(--cat-core-bg);border-radius:8px;padding:14px;text-align:center">
-                <div style="font-size:18px;font-weight:800;color:var(--cat-core-text);margin-bottom:6px">10.0.1.0<span style="color:var(--cat-basics-h)">/24</span></div>
-                <div style="font-size:12px;color:var(--text-2)">256개 IP<br>10.0.1.0 ~ 10.0.1.255<br>서브넷 크기로 적합</div>
-              </div>
-              <div style="background:var(--cat-ops-bg);border-radius:8px;padding:14px;text-align:center">
-                <div style="font-size:18px;font-weight:800;color:var(--cat-ops-text);margin-bottom:6px">10.0.1.5<span style="color:var(--text-3)">/32</span></div>
-                <div style="font-size:12px;color:var(--text-2)">IP 1개<br>정확히 그 IP만<br>보안 그룹 소스에 사용</div>
-              </div>
-            </div>
-            <div style="margin-top:14px;background:var(--surface-2);border-radius:8px;padding:12px;font-size:13px;color:var(--text-2)">
-              💡 <strong>/뒤 숫자가 클수록 범위가 좁아집니다.</strong> /16 → 65536개, /24 → 256개, /32 → 1개
-            </div>
+            <strong>기본 VPC(Default VPC)</strong><br>
+            AWS 계정을 만들면 각 리전에 기본 VPC가 자동 생성됩니다. CIDR은 172.31.0.0/16이며 모든 서브넷이 퍼블릭으로 설정됩니다. 빠른 테스트에는 편리하지만, 실제 서비스에서는 직접 설계한 커스텀 VPC 사용을 권장합니다.
           </div>
         </div>
 
-        <h3>사설 IP 대역</h3>
-        <p>VPC는 인터넷에서 쓰지 않는 사설 IP 대역을 사용합니다. AWS 권장 대역:</p>
-        <div class="content-table-wrap">
-          <table class="content-table">
-            <thead><tr><th>대역</th><th>범위</th><th>권장 VPC CIDR</th></tr></thead>
-            <tbody>
-              <tr><td><code>10.0.0.0/8</code></td><td>10.0.0.0 ~ 10.255.255.255</td><td><code>10.0.0.0/16</code></td></tr>
-              <tr><td><code>172.16.0.0/12</code></td><td>172.16.0.0 ~ 172.31.255.255</td><td><code>172.31.0.0/16</code></td></tr>
-              <tr><td><code>192.168.0.0/16</code></td><td>192.168.0.0 ~ 192.168.255.255</td><td><code>192.168.0.0/16</code></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="content-section" id="subnet">
-        <div class="section-label">03</div>
-        <h2>퍼블릭 서브넷 vs 프라이빗 서브넷</h2>
-        <p>VPC 안의 IP 대역을 쪼갠 조각이 서브넷입니다. 차이는 단 하나 — <strong>라우팅 테이블에 인터넷 게이트웨이(IGW)로 가는 길이 있느냐 없느냐</strong>입니다.</p>
-
-        <div class="diagram-card">
-          <div class="diagram-header">🌐 VPC 구조 — 퍼블릭 vs 프라이빗</div>
-          <div class="diagram-body">
-            <div style="border:2px dashed var(--border);border-radius:12px;padding:16px">
-              <div style="font-size:12px;font-weight:700;color:var(--text-3);margin-bottom:12px">🌐 VPC 10.0.0.0/16 — 서울 리전</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-                <div style="background:var(--cat-basics-bg);border-radius:8px;padding:14px">
-                  <div style="font-size:11px;font-weight:700;color:var(--cat-basics-text);margin-bottom:8px">🟢 퍼블릭 서브넷 (AZ 2a)</div>
-                  <div style="font-size:11px;color:var(--text-2);margin-bottom:4px">10.0.1.0/24</div>
-                  <div style="font-size:11px;color:var(--text-3);margin-bottom:8px">↔ 인터넷 통신 가능</div>
-                  <div style="background:rgba(255,255,255,0.6);border-radius:4px;padding:6px;font-size:11px">🖥 웹서버 (EC2)<br>⚖️ ALB</div>
-                </div>
-                <div style="background:var(--surface-2);border-radius:8px;padding:14px">
-                  <div style="font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:8px">🔒 프라이빗 서브넷 (AZ 2a)</div>
-                  <div style="font-size:11px;color:var(--text-2);margin-bottom:4px">10.0.2.0/24</div>
-                  <div style="font-size:11px;color:var(--text-3);margin-bottom:8px">→ 외부 접근 불가</div>
-                  <div style="background:rgba(255,255,255,0.6);border-radius:4px;padding:6px;font-size:11px">🗄 RDS (DB)<br>🔧 내부 API</div>
-                </div>
-              </div>
-              <div style="display:flex;gap:8px;justify-content:center">
-                <div style="background:var(--cat-basics-h);color:#fff;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:700">🚪 인터넷 게이트웨이</div>
-                <div style="background:var(--cat-ops-h);color:#fff;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:700">🔄 NAT Gateway</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <h3>CIDR 블록</h3>
+        <p>VPC 생성 시 IP 주소 범위를 CIDR 표기법으로 지정합니다. <code>10.0.0.0/16</code>은 10.0.0.0 ~ 10.0.255.255 범위로 총 65,536개 IP 주소를 의미합니다.</p>
 
         <div class="content-table-wrap">
           <table class="content-table">
-            <thead><tr><th>구분</th><th>퍼블릭 서브넷</th><th>프라이빗 서브넷</th></tr></thead>
+            <thead>
+              <tr>
+                <th>CIDR</th>
+                <th>IP 범위</th>
+                <th>사용 가능 IP 수</th>
+                <th>용도</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td>인터넷 접근</td><td>가능 (IGW 경유)</td><td>불가 (직접)</td></tr>
-              <tr><td>외부에서 접근</td><td>가능</td><td>불가</td></tr>
-              <tr><td>내부→외부 통신</td><td>가능</td><td>NAT Gateway 경유로 가능</td></tr>
-              <tr><td>배치 서비스</td><td>ALB, Bastion Host, NAT GW</td><td>EC2 앱 서버, RDS, ElastiCache</td></tr>
+              <tr>
+                <td><code>10.0.0.0/8</code></td>
+                <td>10.0.0.0 ~ 10.255.255.255</td>
+                <td>약 1,677만</td>
+                <td>대규모 기업</td>
+              </tr>
+              <tr>
+                <td><code>10.0.0.0/16</code></td>
+                <td>10.0.0.0 ~ 10.0.255.255</td>
+                <td>65,536</td>
+                <td>일반 서비스 (권장)</td>
+              </tr>
+              <tr>
+                <td><code>10.0.0.0/24</code></td>
+                <td>10.0.0.0 ~ 10.0.0.255</td>
+                <td>256</td>
+                <td>소규모 서브넷</td>
+              </tr>
             </tbody>
           </table>
         </div>
-      </section>
-
-      <section class="content-section" id="routing">
-        <div class="section-label">04</div>
-        <h2>라우팅 테이블 · IGW · NAT Gateway</h2>
-
-        <h3>라우팅 테이블</h3>
-        <p>서브넷의 트래픽이 어디로 가야 하는지 정하는 규칙표입니다.</p>
-        <div class="content-table-wrap">
-          <table class="content-table">
-            <thead><tr><th>대상</th><th>타깃</th><th>의미</th></tr></thead>
-            <tbody>
-              <tr><td><code>10.0.0.0/16</code></td><td>local</td><td>VPC 내부 통신 (항상 있음)</td></tr>
-              <tr><td><code>0.0.0.0/0</code></td><td>igw-xxx</td><td>나머지 모든 트래픽 → 인터넷 (퍼블릭)</td></tr>
-              <tr><td><code>0.0.0.0/0</code></td><td>nat-xxx</td><td>나머지 모든 트래픽 → NAT GW (프라이빗)</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h3>인터넷 게이트웨이 (IGW)</h3>
-        <p>VPC와 인터넷을 연결하는 관문입니다. VPC당 하나만 붙이고, <strong>가용성 99.99% · 대역폭 무제한 · 과금 없음</strong>입니다.</p>
-
-        <h3>NAT Gateway</h3>
-        <p>프라이빗 서브넷의 EC2가 소프트웨어 업데이트나 외부 API 호출을 할 때 씁니다. <strong>내부 → 외부는 가능, 외부 → 내부는 불가</strong>합니다.</p>
 
         <div class="callout callout-warn">
-          <span class="callout-icon">💰</span>
+          <div class="callout-icon">⚠️</div>
           <div class="callout-body">
-            <strong>NAT Gateway 요금 주의</strong><br>
-            NAT Gateway는 <strong>시간당 약 $0.059 + 데이터 처리량 GB당 $0.059</strong>로 꽤 비쌉니다. 학습 중에 만들었다 잊어버리면 하루 $1.4+가 나옵니다. 실습 후 반드시 삭제하세요.
+            <strong>AWS가 예약하는 IP 5개</strong><br>
+            각 서브넷에서 첫 4개(네트워크 주소·라우터·DNS·예약)와 마지막 1개(브로드캐스트)는 AWS가 예약합니다. /24 서브넷(256개)이라면 실제 사용 가능한 IP는 <strong>251개</strong>입니다.
           </div>
         </div>
       </section>
 
-      <section class="content-section" id="sg-nacl">
-        <div class="section-label">05</div>
-        <h2>보안 그룹 vs NACL</h2>
-        <p>VPC에는 두 겹의 방화벽이 있습니다.</p>
+      <!-- 02. 서브넷 -->
+      <section class="content-section" id="s2">
+        <div class="section-eyebrow">02</div>
+        <h2>서브넷 — 퍼블릭과 프라이빗</h2>
+        <p>VPC는 하나의 큰 네트워크 공간입니다. 이 공간을 용도별로 나눈 것이 <strong>서브넷(Subnet)</strong>입니다. 서브넷은 반드시 하나의 가용 영역(AZ)에 속합니다.</p>
 
-        <div class="content-table-wrap">
-          <table class="content-table">
-            <thead><tr><th>구분</th><th>보안 그룹</th><th>네트워크 ACL (NACL)</th></tr></thead>
-            <tbody>
-              <tr><td>적용 단위</td><td>인스턴스(ENI)</td><td>서브넷</td></tr>
-              <tr><td>상태</td><td>Stateful (응답 자동 허용)</td><td>Stateless (인바운드·아웃바운드 별도 설정)</td></tr>
-              <tr><td>규칙 방식</td><td>허용만 가능 (Deny 없음)</td><td>허용 + 거부 모두 가능</td></tr>
-              <tr><td>규칙 평가</td><td>모든 규칙 평가 후 결정</td><td>번호 순서대로 평가 (낮은 번호 우선)</td></tr>
-              <tr><td>기본값</td><td>모든 인바운드 차단</td><td>모든 트래픽 허용</td></tr>
-              <tr><td>주로 쓰는 곳</td><td>대부분의 접근 제어</td><td>서브넷 단위 IP 차단 (DDoS 대응)</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="callout callout-tip">
-          <span class="callout-icon">💡</span>
-          <div class="callout-body">
-            <strong>실무에서는 보안 그룹만 써도 충분합니다</strong><br>
-            NACL은 Stateless라 인바운드를 허용해도 아웃바운드 규칙을 별도로 열어야 합니다. 관리가 복잡해서, 특정 IP를 서브넷 단위로 차단해야 하는 경우가 아니면 보안 그룹만 씁니다.
+        <div class="compare-box">
+          <div class="compare-panel">
+            <div class="compare-panel-header compare-header-primary">퍼블릭 서브넷</div>
+            <div class="compare-panel-body">
+              <ul>
+                <li>인터넷 게이트웨이(IGW)로 라우팅됨</li>
+                <li>퍼블릭 IP 할당 가능</li>
+                <li>외부에서 직접 접근 가능</li>
+                <li>웹 서버, Load Balancer, Bastion Host 배치</li>
+              </ul>
+            </div>
           </div>
-        </div>
-      </section>
-
-      <section class="content-section" id="bastion">
-        <div class="section-label">06</div>
-        <h2>Bastion Host — 프라이빗 서버 접속 방법</h2>
-        <p>프라이빗 서브넷의 EC2에는 직접 SSH가 안 됩니다. 인터넷에서 접근할 수 없으니까요. 이때 퍼블릭 서브넷에 <strong>Bastion Host(점프 서버)</strong>를 두고, 거기를 거쳐서 접속합니다.</p>
-
-        <div class="diagram-card">
-          <div class="diagram-header">🔐 Bastion Host 접속 흐름</div>
-          <div class="diagram-body">
-            <div class="dns-flow">
-              <div class="dns-node"><div class="dns-node-icon">💻</div><span>내 PC</span></div>
-              <div class="dns-arrow">→ SSH</div>
-              <div class="dns-node"><div class="dns-node-icon">🏰</div><span>Bastion Host<br><small>퍼블릭 서브넷</small></span></div>
-              <div class="dns-arrow">→ SSH</div>
-              <div class="dns-node"><div class="dns-node-icon">🖥</div><span>앱 서버 EC2<br><small>프라이빗 서브넷</small></span></div>
+          <div class="compare-panel">
+            <div class="compare-panel-header compare-header-accent">프라이빗 서브넷</div>
+            <div class="compare-panel-body">
+              <ul>
+                <li>IGW로 직접 라우팅 없음</li>
+                <li>퍼블릭 IP 없음</li>
+                <li>외부에서 직접 접근 불가</li>
+                <li>DB 서버, 앱 서버, 내부 API 배치</li>
+              </ul>
             </div>
           </div>
         </div>
 
-        <div class="callout callout-tip">
-          <span class="callout-icon">💡</span>
-          <div class="callout-body">
-            <strong>Session Manager로 Bastion Host 대체 가능</strong><br>
-            CH02에서 배운 Session Manager를 쓰면 Bastion Host 없이 프라이빗 EC2에 접속할 수 있습니다. SSH 포트 22를 열 필요도 없어서 더 안전합니다. ISMS-P 감사에서도 유리합니다.
-          </div>
-        </div>
-      </section>
-
-      <section class="content-section" id="endpoint">
-        <div class="section-label">07</div>
-        <h2>VPC Endpoint — 인터넷 없이 AWS 서비스 접근</h2>
-        <p>프라이빗 서브넷의 EC2에서 S3나 DynamoDB를 쓰려면 원래 NAT Gateway를 거쳐 인터넷으로 나갔다가 들어와야 합니다. <strong>VPC Endpoint</strong>를 쓰면 인터넷을 거치지 않고 AWS 내부 네트워크로 직접 연결됩니다.</p>
+        <h3>고가용성을 위한 멀티 AZ 구성</h3>
+        <p>실제 서비스에서는 한 AZ에 장애가 생겨도 서비스가 계속되도록 <strong>여러 AZ에 서브넷을 분산</strong>합니다. 아래는 전형적인 2-AZ 구성입니다.</p>
 
         <div class="content-table-wrap">
           <table class="content-table">
-            <thead><tr><th>종류</th><th>대상 서비스</th><th>과금</th></tr></thead>
+            <thead>
+              <tr>
+                <th>서브넷</th>
+                <th>AZ-a (ap-northeast-2a)</th>
+                <th>AZ-b (ap-northeast-2b)</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td>게이트웨이 엔드포인트</td><td>S3, DynamoDB</td><td>무료</td></tr>
-              <tr><td>인터페이스 엔드포인트</td><td>대부분의 AWS 서비스</td><td>시간당 + 데이터 전송량</td></tr>
+              <tr>
+                <td>퍼블릭</td>
+                <td>10.0.1.0/24</td>
+                <td>10.0.3.0/24</td>
+              </tr>
+              <tr>
+                <td>프라이빗</td>
+                <td>10.0.2.0/24</td>
+                <td>10.0.4.0/24</td>
+              </tr>
             </tbody>
           </table>
         </div>
-
-        <p>S3를 많이 쓰는 환경에서 게이트웨이 엔드포인트를 붙이면 NAT Gateway 데이터 전송 비용을 크게 줄일 수 있습니다. 무료이니 붙이지 않을 이유가 없습니다.</p>
       </section>
 
-      <section class="content-section" id="practice">
-        <div class="section-label">실습</div>
-        <h2>VPC 직접 만들기</h2>
+      <!-- 03. IGW -->
+      <section class="content-section" id="s3">
+        <div class="section-eyebrow">03</div>
+        <h2>인터넷 게이트웨이 (IGW)</h2>
+        <p><strong>인터넷 게이트웨이(IGW)</strong>는 VPC와 인터넷을 연결하는 관문입니다. VPC 하나에 IGW 하나를 연결하며, IGW 자체는 고가용성이 보장되어 별도 이중화 설정이 필요 없습니다.</p>
 
-        <ol style="font-size:15px;color:var(--text-2);line-height:2.2;padding-left:20px">
-          <li><strong>VPC 생성</strong>: VPC 콘솔 → VPC 생성 → 이름 <code>my-vpc</code>, CIDR <code>10.0.0.0/16</code></li>
-          <li><strong>퍼블릭 서브넷</strong>: 서브넷 생성 → VPC 선택 → AZ: ap-northeast-2a → CIDR <code>10.0.1.0/24</code></li>
-          <li><strong>프라이빗 서브넷</strong>: 서브넷 생성 → AZ: ap-northeast-2a → CIDR <code>10.0.2.0/24</code></li>
-          <li><strong>IGW 생성 및 연결</strong>: 인터넷 게이트웨이 → 생성 → VPC에 연결</li>
-          <li><strong>퍼블릭 라우팅 테이블</strong>: 라우팅 테이블 → 생성 → <code>0.0.0.0/0 → IGW</code> 추가 → 퍼블릭 서브넷 연결</li>
-          <li><strong>퍼블릭 IP 자동 할당</strong>: 퍼블릭 서브넷 선택 → 서브넷 설정 편집 → 퍼블릭 IP 자동 할당 활성화</li>
-          <li><strong>EC2 생성 테스트</strong>: 새 VPC의 퍼블릭 서브넷에 EC2 생성 → SSH 접속 확인</li>
+        <div class="flow-diagram">
+          <div class="flow-step">
+            <div class="flow-step-icon">🌐</div>
+            <div class="flow-step-label">인터넷</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-step-icon">🚪</div>
+            <div class="flow-step-label">IGW</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-step-icon">🟦</div>
+            <div class="flow-step-label">퍼블릭<br>서브넷</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-step-icon">🖥️</div>
+            <div class="flow-step-label">EC2</div>
+          </div>
+        </div>
+
+        <h3>IGW 연결 절차</h3>
+        <ol>
+          <li>IGW 생성</li>
+          <li>VPC에 IGW Attach (연결)</li>
+          <li>퍼블릭 서브넷의 라우팅 테이블에 <code>0.0.0.0/0 → IGW</code> 추가</li>
+          <li>EC2에 퍼블릭 IP 또는 탄력적 IP(EIP) 할당</li>
         </ol>
 
-        <div class="callout callout-warn">
-          <span class="callout-icon">⚠️</span>
+        <div class="callout callout-tip">
+          <div class="callout-icon">💡</div>
           <div class="callout-body">
-            <strong>NAT Gateway는 실습에서 만들지 마세요</strong><br>
-            시간당 $0.059 과금입니다. 개념만 이해하고 넘어가세요. 실제로 필요한 건 CH10 종합 실습 때입니다.
+            <strong>서브넷 자체가 퍼블릭이 되는 조건</strong><br>
+            서브넷이 "퍼블릭"으로 불리려면 두 조건이 모두 충족되어야 합니다. ① 라우팅 테이블에 <code>0.0.0.0/0 → IGW</code> 규칙 존재, ② EC2에 퍼블릭 IP(또는 EIP) 할당. 둘 중 하나라도 없으면 인터넷에서 접근 불가합니다.
           </div>
-        </div>
-
-        <div class="summary-card">
-          <div class="summary-card-title">📌 CH03 핵심 개념 요약</div>
-          <div class="summary-item"><span class="summary-term">VPC</span><span>내 전용 네트워크 대역. 리전 단위로 생성</span></div>
-          <div class="summary-item"><span class="summary-term">CIDR /16</span><span>65,536개 IP. VPC에 적합. /24는 서브넷에 적합</span></div>
-          <div class="summary-item"><span class="summary-term">퍼블릭 서브넷</span><span>라우팅 테이블에 IGW 경로 있음 → 인터넷 통신 가능</span></div>
-          <div class="summary-item"><span class="summary-term">프라이빗 서브넷</span><span>IGW 경로 없음 → 외부 직접 접근 불가. DB·앱 서버 배치</span></div>
-          <div class="summary-item"><span class="summary-term">NAT Gateway</span><span>프라이빗 → 외부 통신. 시간당 과금. 실습 후 삭제 필수</span></div>
-          <div class="summary-item"><span class="summary-term">보안 그룹 vs NACL</span><span>보안 그룹=인스턴스·Stateful. NACL=서브넷·Stateless</span></div>
-          <div class="summary-item"><span class="summary-term">VPC Endpoint</span><span>S3·DynamoDB 게이트웨이 엔드포인트는 무료. NAT 비용 절감</span></div>
         </div>
       </section>
 
+      <!-- 04. 라우팅 테이블 -->
+      <section class="content-section" id="s4">
+        <div class="section-eyebrow">04</div>
+        <h2>라우팅 테이블</h2>
+        <p><strong>라우팅 테이블(Route Table)</strong>은 네트워크 트래픽을 어디로 보낼지 결정하는 규칙 목록입니다. 모든 서브넷은 반드시 하나의 라우팅 테이블과 연결됩니다.</p>
+
+        <h3>퍼블릭 서브넷 라우팅 테이블</h3>
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead>
+              <tr>
+                <th>목적지 (Destination)</th>
+                <th>대상 (Target)</th>
+                <th>설명</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>10.0.0.0/16</code></td>
+                <td>local</td>
+                <td>VPC 내부 통신 (자동 생성, 삭제 불가)</td>
+              </tr>
+              <tr>
+                <td><code>0.0.0.0/0</code></td>
+                <td>igw-xxxxxxxx</td>
+                <td>인터넷 트래픽 → IGW로</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>프라이빗 서브넷 라우팅 테이블</h3>
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead>
+              <tr>
+                <th>목적지 (Destination)</th>
+                <th>대상 (Target)</th>
+                <th>설명</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>10.0.0.0/16</code></td>
+                <td>local</td>
+                <td>VPC 내부 통신 (자동 생성)</td>
+              </tr>
+              <tr>
+                <td><code>0.0.0.0/0</code></td>
+                <td>nat-xxxxxxxx</td>
+                <td>외부 통신 → NAT 게이트웨이로</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout-tip">
+          <div class="callout-icon">💡</div>
+          <div class="callout-body">
+            <strong>라우팅 우선순위 — 더 구체적인 경로가 우선</strong><br>
+            <code>10.0.0.0/16</code>과 <code>0.0.0.0/0</code>이 모두 있을 때, VPC 내부 IP(10.0.x.x)는 local로, 그 외 모든 트래픽은 IGW나 NAT로 라우팅됩니다. prefix가 길수록(더 구체적일수록) 우선순위가 높습니다.
+          </div>
+        </div>
+      </section>
+
+      <!-- 05. NAT -->
+      <section class="content-section" id="s5">
+        <div class="section-eyebrow">05</div>
+        <h2>NAT 게이트웨이</h2>
+        <p>프라이빗 서브넷의 EC2는 외부에서 직접 접근할 수 없습니다. 하지만 소프트웨어 업데이트나 외부 API 호출처럼 <strong>EC2가 인터넷에 나가야 하는 경우</strong>가 있습니다. 이때 <strong>NAT 게이트웨이</strong>를 사용합니다.</p>
+        <p>NAT 게이트웨이는 반드시 <strong>퍼블릭 서브넷</strong>에 위치하며, 탄력적 IP(EIP)가 필요합니다.</p>
+
+        <div class="flow-diagram">
+          <div class="flow-step">
+            <div class="flow-step-icon">🖥️</div>
+            <div class="flow-step-label">프라이빗<br>EC2</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-step-icon">🔄</div>
+            <div class="flow-step-label">NAT GW<br>(퍼블릭 서브넷)</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-step-icon">🚪</div>
+            <div class="flow-step-label">IGW</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-step-icon">🌐</div>
+            <div class="flow-step-label">인터넷</div>
+          </div>
+        </div>
+
+        <div class="callout callout-warn">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-body">
+            <strong>NAT 게이트웨이는 과금됩니다</strong><br>
+            시간당 약 $0.045 + 처리 데이터 GB당 $0.045. 학습·테스트 목적이라면 실습 후 <strong>반드시 삭제</strong>하세요. 방치하면 월 수만 원의 비용이 발생합니다.
+          </div>
+        </div>
+
+        <h3>NAT 게이트웨이 vs NAT 인스턴스</h3>
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead>
+              <tr>
+                <th>항목</th>
+                <th>NAT 게이트웨이</th>
+                <th>NAT 인스턴스</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>관리 주체</td>
+                <td>AWS 완전 관리</td>
+                <td>사용자 직접 관리</td>
+              </tr>
+              <tr>
+                <td>고가용성</td>
+                <td>AZ 내 자동 HA</td>
+                <td>직접 구성 필요</td>
+              </tr>
+              <tr>
+                <td>성능</td>
+                <td>최대 45Gbps 자동 확장</td>
+                <td>인스턴스 타입에 제한됨</td>
+              </tr>
+              <tr>
+                <td>비용</td>
+                <td>시간당 고정 과금</td>
+                <td>EC2 비용만 (더 저렴 가능)</td>
+              </tr>
+              <tr>
+                <td>권장 상황</td>
+                <td>프로덕션</td>
+                <td>비용 최소화 테스트</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 06. 보안 그룹 vs NACL -->
+      <section class="content-section" id="s6">
+        <div class="section-eyebrow">06</div>
+        <h2>보안 그룹 vs NACL</h2>
+        <p>VPC에는 두 가지 방화벽이 있습니다. <strong>보안 그룹(Security Group)</strong>은 EC2 인스턴스 수준, <strong>NACL(Network ACL)</strong>은 서브넷 수준에서 동작합니다.</p>
+
+        <div class="compare-box">
+          <div class="compare-panel">
+            <div class="compare-panel-header compare-header-primary">보안 그룹 (Security Group)</div>
+            <div class="compare-panel-body">
+              <ul>
+                <li>EC2 <strong>인스턴스</strong>에 적용</li>
+                <li><strong>Stateful</strong> — 인바운드 허용 시 아웃바운드 자동 허용</li>
+                <li>허용(Allow) 규칙만 설정 가능</li>
+                <li>여러 EC2에 동일 그룹 적용 가능</li>
+                <li>EC2 간 보안 그룹 참조 가능</li>
+              </ul>
+            </div>
+          </div>
+          <div class="compare-panel">
+            <div class="compare-panel-header compare-header-accent">NACL (Network ACL)</div>
+            <div class="compare-panel-body">
+              <ul>
+                <li><strong>서브넷 전체</strong>에 적용</li>
+                <li><strong>Stateless</strong> — 인바운드·아웃바운드 각각 설정 필요</li>
+                <li>허용(Allow) + 거부(Deny) 규칙 모두 설정</li>
+                <li>규칙 번호 순서대로 처리 (낮을수록 우선)</li>
+                <li>특정 IP 차단에 효과적</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <h3>Stateful vs Stateless 이해하기</h3>
+        <div class="grid-2col">
+          <div class="info-box info-box-primary">
+            <strong>보안 그룹 (Stateful)</strong><br>
+            클라이언트가 EC2에 HTTP 요청(인바운드 80포트)을 보낼 때, 인바운드를 허용하면 EC2의 응답(아웃바운드)은 <strong>자동으로 허용</strong>됩니다. "대화의 상태를 기억"합니다.
+          </div>
+          <div class="info-box info-box-warn">
+            <strong>NACL (Stateless)</strong><br>
+            각 패킷을 독립적으로 평가합니다. 인바운드 80포트를 허용해도, EC2 응답의 아웃바운드(임시 포트 1024~65535)도 <strong>별도 허용 규칙을 추가</strong>해야 합니다.
+          </div>
+        </div>
+
+        <h3>보안 그룹 인바운드 규칙 예시</h3>
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead>
+              <tr>
+                <th>유형</th>
+                <th>프로토콜</th>
+                <th>포트</th>
+                <th>소스</th>
+                <th>설명</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>HTTP</td>
+                <td>TCP</td>
+                <td>80</td>
+                <td>0.0.0.0/0</td>
+                <td>전체 인터넷 HTTP 허용</td>
+              </tr>
+              <tr>
+                <td>HTTPS</td>
+                <td>TCP</td>
+                <td>443</td>
+                <td>0.0.0.0/0</td>
+                <td>전체 인터넷 HTTPS 허용</td>
+              </tr>
+              <tr>
+                <td>SSH</td>
+                <td>TCP</td>
+                <td>22</td>
+                <td>내 IP/32</td>
+                <td>관리자 IP만 SSH 허용</td>
+              </tr>
+              <tr>
+                <td>MySQL/Aurora</td>
+                <td>TCP</td>
+                <td>3306</td>
+                <td>앱서버 보안그룹 ID</td>
+                <td>앱 서버에서만 DB 접근</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 07. Bastion Host -->
+      <section class="content-section" id="s7">
+        <div class="section-eyebrow">07</div>
+        <h2>Bastion Host</h2>
+        <p>프라이빗 서브넷의 EC2는 퍼블릭 IP가 없어 외부에서 SSH로 직접 접속할 수 없습니다. <strong>Bastion Host(점프 서버)</strong>는 퍼블릭 서브넷에 위치한 EC2로, 관리자가 이 서버를 경유해 프라이빗 EC2에 접속합니다.</p>
+
+        <div class="flow-diagram">
+          <div class="flow-step">
+            <div class="flow-step-icon">👨‍💻</div>
+            <div class="flow-step-label">관리자<br>(로컬 PC)</div>
+          </div>
+          <div class="flow-arrow">→ SSH →</div>
+          <div class="flow-step">
+            <div class="flow-step-icon">🏰</div>
+            <div class="flow-step-label">Bastion Host<br>(퍼블릭 서브넷)</div>
+          </div>
+          <div class="flow-arrow">→ SSH →</div>
+          <div class="flow-step">
+            <div class="flow-step-icon">🖥️</div>
+            <div class="flow-step-label">프라이빗 EC2<br>(프라이빗 서브넷)</div>
+          </div>
+        </div>
+
+        <h3>Bastion Host 보안 설정</h3>
+        <div class="grid-2col">
+          <div class="info-box info-box-primary">
+            <strong>Bastion Host 보안 그룹</strong>
+            <ul>
+              <li>인바운드: SSH(22) — 관리자 IP만</li>
+              <li>아웃바운드: SSH(22) — 프라이빗 서브넷 CIDR</li>
+            </ul>
+          </div>
+          <div class="info-box info-box-primary">
+            <strong>프라이빗 EC2 보안 그룹</strong>
+            <ul>
+              <li>인바운드: SSH(22) — Bastion SG ID 참조</li>
+              <li>아웃바운드: 필요한 포트만 허용</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout callout-tip">
+          <div class="callout-icon">💡</div>
+          <div class="callout-body">
+            <strong>더 안전한 대안 — AWS Systems Manager Session Manager</strong><br>
+            SSH 포트(22)를 열지 않아도 브라우저 또는 AWS CLI로 프라이빗 EC2에 접속할 수 있습니다. IAM으로 접근을 제어하고, 세션 로그를 CloudTrail에 기록해 감사(Audit)가 가능합니다. 신규 아키텍처에서는 Bastion Host 대신 Session Manager 사용을 권장합니다.
+          </div>
+        </div>
+      </section>
+
+      <!-- 08. VPC Peering -->
+      <section class="content-section" id="s8">
+        <div class="section-eyebrow">08</div>
+        <h2>VPC Peering</h2>
+        <p>두 VPC 사이를 AWS 내부 프라이빗 네트워크로 연결하는 기능입니다. 같은 계정·다른 계정, 같은 리전·다른 리전 간 모두 연결 가능합니다.</p>
+
+        <div class="callout callout-warn">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-body">
+            <strong>VPC Peering 핵심 제약사항</strong><br>
+            ① <strong>CIDR 겹침 불가</strong> — 두 VPC의 IP 범위가 겹치면 연결 불가. 미리 CIDR 계획 필수.<br>
+            ② <strong>전이(Transitive) 라우팅 불가</strong> — A↔B, B↔C가 연결되어도 A↔C 통신 안 됨. A↔C 별도 Peering 필요.<br>
+            ③ 연결 후 양쪽 라우팅 테이블에 각각 경로를 추가해야 통신 가능.
+          </div>
+        </div>
+
+        <h3>여러 VPC 연결 — Transit Gateway</h3>
+        <p>VPC가 많아지면 Peering 수가 폭발적으로 늘어납니다(n개 VPC → n×(n-1)/2개 Peering). 이때는 <strong>Transit Gateway</strong>를 허브로 두고 각 VPC를 스포크처럼 연결합니다. 전이 라우팅을 지원하며 관리가 훨씬 단순해집니다.</p>
+      </section>
+
+      <!-- 09. 전체 아키텍처 -->
+      <section class="content-section" id="s9">
+        <div class="section-eyebrow">09</div>
+        <h2>전형적인 3-Tier 아키텍처</h2>
+        <p>실제 서비스에서 자주 사용하는 구성입니다. 웹·앱·DB 계층을 각각 다른 서브넷에 배치해 보안과 가용성을 높입니다.</p>
+
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead>
+              <tr>
+                <th>계층</th>
+                <th>서브넷</th>
+                <th>배치 리소스</th>
+                <th>인터넷 접근</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>웹 계층</td>
+                <td>퍼블릭</td>
+                <td>ALB (Application Load Balancer)</td>
+                <td>허용 (외부 요청 수신)</td>
+              </tr>
+              <tr>
+                <td>앱 계층</td>
+                <td>프라이빗</td>
+                <td>EC2 (웹·API 서버)</td>
+                <td>차단 (NAT로 아웃바운드만)</td>
+              </tr>
+              <tr>
+                <td>DB 계층</td>
+                <td>프라이빗</td>
+                <td>RDS (MySQL, PostgreSQL 등)</td>
+                <td>차단 (VPC 내부만)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 핵심 정리 -->
+      <section class="content-section" id="summary">
+        <h2>핵심 정리</h2>
+        <div class="summary-card">
+          <dl class="summary-list">
+            <div class="summary-item">
+              <dt class="summary-term">VPC</dt>
+              <dd class="summary-desc">AWS 위의 가상 데이터센터. CIDR 블록으로 IP 범위 지정. 계정당 리전별 기본 VPC 1개 자동 생성.</dd>
+            </div>
+            <div class="summary-item">
+              <dt class="summary-term">서브넷</dt>
+              <dd class="summary-desc">VPC를 나눈 단위. 퍼블릭(IGW 연결)과 프라이빗(IGW 없음). 단일 AZ에 속함.</dd>
+            </div>
+            <div class="summary-item">
+              <dt class="summary-term">IGW</dt>
+              <dd class="summary-desc">VPC ↔ 인터넷 연결 관문. VPC당 1개. 고가용성 자동 보장. 과금 없음.</dd>
+            </div>
+            <div class="summary-item">
+              <dt class="summary-term">라우팅 테이블</dt>
+              <dd class="summary-desc">트래픽 목적지 결정 규칙. 더 구체적인 경로(긴 prefix)가 우선.</dd>
+            </div>
+            <div class="summary-item">
+              <dt class="summary-term">NAT 게이트웨이</dt>
+              <dd class="summary-desc">프라이빗 EC2의 아웃바운드 인터넷 통신. 퍼블릭 서브넷에 위치. 시간당 과금 주의.</dd>
+            </div>
+            <div class="summary-item">
+              <dt class="summary-term">보안 그룹</dt>
+              <dd class="summary-desc">인스턴스 수준 방화벽. Stateful. 허용 규칙만. EC2 간 SG 참조 가능.</dd>
+            </div>
+            <div class="summary-item">
+              <dt class="summary-term">NACL</dt>
+              <dd class="summary-desc">서브넷 수준 방화벽. Stateless. 허용·거부 규칙 모두. 규칙 번호 순 처리.</dd>
+            </div>
+            <div class="summary-item">
+              <dt class="summary-term">Bastion Host</dt>
+              <dd class="summary-desc">프라이빗 EC2 접속 경유 서버. Session Manager로 대체 권장.</dd>
+            </div>
+            <div class="summary-item">
+              <dt class="summary-term">VPC Peering</dt>
+              <dd class="summary-desc">VPC 간 프라이빗 연결. CIDR 겹침 불가. 전이 라우팅 불가. 다수 VPC는 Transit Gateway 사용.</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <!-- 페이지네이션 -->
       <div class="chapter-pagination">
-        <a href="/chapters/ch02/" class="pag-link pag-prev">
-          <span class="pag-dir">← 이전 챕터</span>
-          <span class="pag-title">CH02 Amazon EC2</span>
-          <span class="pag-sub">가상 서버 완전 정복</span>
-        </a>
-        <a href="/chapters/ch04/" class="pag-link pag-next">
-          <span class="pag-dir">다음 챕터 →</span>
-          <span class="pag-title">CH04 ELB · Auto Scaling</span>
-          <span class="pag-sub">고가용성과 자동 확장</span>
-        </a>
+        <a href="/chapters/ch02/" class="chapter-pagination-btn chapter-pagination-prev">← CH02 · Amazon EC2</a>
+        <a href="/chapters/ch04/" class="chapter-pagination-btn chapter-pagination-next">CH04 · ELB · Auto Scaling →</a>
       </div>
 
     </main>
 
+    <!-- TOC -->
     <aside class="chapter-toc">
       <div class="toc-card">
-        <div class="toc-title">이 챕터의 목차</div>
-        <ul class="toc-list">
-          <li><a href="#what" class="toc-link">01 · VPC란</a></li>
-          <li><a href="#cidr" class="toc-link">02 · CIDR 표기법</a></li>
-          <li><a href="#subnet" class="toc-link">03 · 퍼블릭 vs 프라이빗</a></li>
-          <li><a href="#routing" class="toc-link">04 · 라우팅 · IGW · NAT</a></li>
-          <li><a href="#sg-nacl" class="toc-link">05 · 보안 그룹 vs NACL</a></li>
-          <li><a href="#bastion" class="toc-link">06 · Bastion Host</a></li>
-          <li><a href="#endpoint" class="toc-link">07 · VPC Endpoint</a></li>
-          <li><a href="#practice" class="toc-link">실습 · VPC 만들기</a></li>
-        </ul>
+        <div class="toc-title">목차</div>
+        <nav class="toc-nav">
+          <ul class="toc-list">
+            <li><a href="#s1" class="toc-link">01 VPC란 무엇인가</a></li>
+            <li><a href="#s2" class="toc-link">02 서브넷</a></li>
+            <li><a href="#s3" class="toc-link">03 인터넷 게이트웨이</a></li>
+            <li><a href="#s4" class="toc-link">04 라우팅 테이블</a></li>
+            <li><a href="#s5" class="toc-link">05 NAT 게이트웨이</a></li>
+            <li><a href="#s6" class="toc-link">06 보안 그룹 vs NACL</a></li>
+            <li><a href="#s7" class="toc-link">07 Bastion Host</a></li>
+            <li><a href="#s8" class="toc-link">08 VPC Peering</a></li>
+            <li><a href="#s9" class="toc-link">09 3-Tier 아키텍처</a></li>
+            <li><a href="#summary" class="toc-link">핵심 정리</a></li>
+          </ul>
+        </nav>
       </div>
     </aside>
+
   </div>
 </div>
 
 <footer class="site-footer">
   <div class="container">
-    <p>AWS 완전 정복 가이드 · CH03 · Amazon VPC<br>Spring Boot 기준</p>
+    <p>AWS 완전 정복 가이드 · CH03 · Amazon VPC</p>
   </div>
 </footer>
+
 <script src="../../assets/nav.js"></script>
 </body>
 </html>
