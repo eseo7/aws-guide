@@ -31,6 +31,26 @@
     return normalizeCompleted(list);
   }
 
+  /* ── Keep home pricing labels timeless ─────────────── */
+  function normalizeHomePricingLabels() {
+    var labels = {
+      ch05: { text: '사용량 기반 과금', className: 'tag tag-billing' },
+      ch07: { text: '사용량 기반 과금', className: 'tag tag-billing' },
+      ch08: { text: '수집·보관 과금 주의', className: 'tag tag-billing' },
+      ch11: { text: '비용 최적화', className: 'tag tag-free' }
+    };
+
+    Object.keys(labels).forEach(function (id) {
+      var card = document.querySelector('.chapter-card[data-chapter-id="' + id + '"]');
+      if (!card) return;
+      var tags = card.querySelectorAll('.card-tags .tag');
+      if (tags.length < 2) return;
+      var billingTag = tags[tags.length - 1];
+      billingTag.textContent = labels[id].text;
+      billingTag.className = labels[id].className;
+    });
+  }
+
   /* ── Update all progress UI ─────────────────────────── */
   function renderProgress(completed) {
     var unique = normalizeCompleted(completed);
@@ -119,6 +139,7 @@
 
   /* ── Init ───────────────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', function () {
+    normalizeHomePricingLabels();
     renderProgress(getCompleted());
     initCompleteBtn();
     initToc();
