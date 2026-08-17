@@ -4,8 +4,12 @@
   var TOTAL = 12;
 
   function getCompleted() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
-    catch (e) { return []; }
+    try {
+      var parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
   }
 
   function saveCompleted(arr) {
@@ -23,26 +27,26 @@
 
   /* ── Update all progress UI ─────────────────────────── */
   function renderProgress(completed) {
-    var done = completed.length;
+    var unique = completed.filter(function (id, idx, arr) {
+      return /^ch(0\d|1[01])$/.test(id) && arr.indexOf(id) === idx;
+    });
+    var done = Math.min(unique.length, TOTAL);
     var pct = Math.round((done / TOTAL) * 100);
 
-    /* Hero progress bar */
     var fill = document.querySelector('.progress-fill');
     var label = document.querySelector('.progress-label');
     if (fill) fill.style.width = pct + '%';
     if (label) label.textContent = done + ' / ' + TOTAL + ' 챕터';
 
-    /* Header mini bar */
     var hFill = document.querySelector('.header-prog-fill');
     var hLabel = document.querySelector('.header-prog-label');
     if (hFill) hFill.style.width = pct + '%';
     if (hLabel) hLabel.textContent = pct + '%';
 
-    /* Card completed states */
-    document.querySelectorAll('[data-chapter-id]').forEach(function (card) {
+    document.querySelectorAll('.chapter-card[data-chapter-id]').forEach(function (card) {
       var chId = card.dataset.chapterId;
       var badge = card.querySelector('.chapter-check-badge');
-      if (completed.indexOf(chId) !== -1) {
+      if (unique.indexOf(chId) !== -1) {
         card.classList.add('is-completed');
         if (badge) badge.style.display = 'flex';
       } else {
@@ -54,18 +58,17 @@
 
   /* ── Chapter complete button ────────────────────────── */
   function initCompleteBtn() {
-    var btn = document.querySelector('.complete-btn[data-chapter]');
+    var btn = document.querySelector('.complete-btn[data-chapter-id]');
     if (!btn) return;
-    var chId = btn.dataset.chapter;
+    var chId = btn.dataset.chapterId;
+    var icon = btn.querySelector('.complete-icon');
+    var text = btn.querySelector('.complete-text');
 
     function syncBtn(completed) {
-      if (completed.indexOf(chId) !== -1) {
-        btn.textContent = '✓ 완료됨';
-        btn.classList.add('is-completed');
-      } else {
-        btn.textContent = '완료로 표시';
-        btn.classList.remove('is-completed');
-      }
+      var isDone = completed.indexOf(chId) !== -1;
+      btn.classList.toggle('is-completed', isDone);
+      if (icon) icon.textContent = isDone ? '✓' : '○';
+      if (text) text.textContent = isDone ? '완료됨' : '완료로 표시';
     }
 
     syncBtn(getCompleted());
@@ -81,7 +84,7 @@
   function initToc() {
     var sections = document.querySelectorAll('.content-section[id]');
     var tocLinks = document.querySelectorAll('.toc-link');
-    if (!sections.length || !tocLinks.length) return;
+    if (!sections.length || !tocLinks.length || !('IntersectionObserver' in window)) return;
 
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
