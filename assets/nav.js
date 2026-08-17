@@ -3,17 +3,23 @@
   var STORAGE_KEY = 'aws-guide-completed';
   var TOTAL = 12;
 
+  function normalizeCompleted(list) {
+    if (!Array.isArray(list)) return [];
+    return list.filter(function (id, idx, arr) {
+      return /^ch(0\d|1[01])$/.test(id) && arr.indexOf(id) === idx;
+    });
+  }
+
   function getCompleted() {
     try {
-      var parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      return Array.isArray(parsed) ? parsed : [];
+      return normalizeCompleted(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
     } catch (e) {
       return [];
     }
   }
 
   function saveCompleted(arr) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizeCompleted(arr)));
   }
 
   function toggleChapter(id) {
@@ -22,14 +28,12 @@
     if (idx === -1) list.push(id);
     else list.splice(idx, 1);
     saveCompleted(list);
-    return list;
+    return normalizeCompleted(list);
   }
 
   /* ── Update all progress UI ─────────────────────────── */
   function renderProgress(completed) {
-    var unique = completed.filter(function (id, idx, arr) {
-      return /^ch(0\d|1[01])$/.test(id) && arr.indexOf(id) === idx;
-    });
+    var unique = normalizeCompleted(completed);
     var done = Math.min(unique.length, TOTAL);
     var pct = Math.round((done / TOTAL) * 100);
 
@@ -65,7 +69,7 @@
     var text = btn.querySelector('.complete-text');
 
     function syncBtn(completed) {
-      var isDone = completed.indexOf(chId) !== -1;
+      var isDone = normalizeCompleted(completed).indexOf(chId) !== -1;
       btn.classList.toggle('is-completed', isDone);
       if (icon) icon.textContent = isDone ? '✓' : '○';
       if (text) text.textContent = isDone ? '완료됨' : '완료로 표시';
