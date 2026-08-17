@@ -51,6 +51,49 @@
     });
   }
 
+  /* ── Keep home card summaries aligned with chapter SSOT ─ */
+  function normalizeHomeCardSummaries() {
+    var summaries = {
+      ch05: {
+        subtitle: '객체 스토리지 — 파일 저장부터 정적 콘텐츠 배포까지',
+        services: '버킷 · 객체 · 스토리지 클래스 · 버전 관리 · Lifecycle · 암호화 · Presigned URL · CloudFront · OAC'
+      },
+      ch06: {
+        subtitle: '관리형 관계형 데이터베이스 — 백업·가용성·확장을 설계하기',
+        services: 'RDS · Multi-AZ · Read Replica · 자동 백업 · 스냅샷 · Aurora · RDS Proxy · Secrets Manager'
+      },
+      ch07: {
+        subtitle: 'DNS와 CDN — 도메인을 연결하고 전 세계에 빠르게 전달하기',
+        services: 'Hosted Zone · Alias · TTL · Routing Policy · CloudFront · Cache · OAC · ACM · Invalidation'
+      },
+      ch08: {
+        subtitle: '운영 가시성 — 장애 신호를 읽고 대응하기',
+        services: 'Metrics · Logs · Alarms · Dashboards · CloudWatch Agent · Logs Insights · SNS · CloudTrail'
+      },
+      ch09: {
+        subtitle: '소스 변경부터 검증·배포·롤백까지 반복 가능한 파이프라인',
+        services: 'CodePipeline · CodeConnections · CodeBuild · CodeDeploy · buildspec.yml · appspec.yml · Systems Manager · Secrets Manager'
+      },
+      ch10: {
+        subtitle: '배운 서비스를 하나의 운영 가능한 웹 아키텍처로 연결하기',
+        services: 'VPC · ALB · Private EC2 · Private RDS · S3 · CloudFront · Route 53 · ACM · CloudWatch · CI/CD · Secrets Manager'
+      },
+      ch11: {
+        subtitle: '예산·이상징후·태그·최적화로 AWS 비용 통제하기',
+        services: 'AWS Budgets · Cost Explorer · Cost Anomaly Detection · Cost Allocation Tags · Compute Optimizer · Trusted Advisor · Savings Plans'
+      }
+    };
+
+    Object.keys(summaries).forEach(function (id) {
+      var card = document.querySelector('.chapter-card[data-chapter-id="' + id + '"]');
+      if (!card) return;
+      var subtitle = card.querySelector('.card-subtitle');
+      var services = card.querySelector('.card-services');
+      if (subtitle) subtitle.textContent = summaries[id].subtitle;
+      if (services) services.textContent = summaries[id].services;
+    });
+  }
+
   /* ── Update all progress UI ─────────────────────────── */
   function renderProgress(completed) {
     var unique = normalizeCompleted(completed);
@@ -140,6 +183,7 @@
   /* ── Init ───────────────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', function () {
     normalizeHomePricingLabels();
+    normalizeHomeCardSummaries();
     renderProgress(getCompleted());
     initCompleteBtn();
     initToc();
