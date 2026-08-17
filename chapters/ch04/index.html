@@ -14,7 +14,7 @@
       <a href="/" class="back-link"><span class="back-arrow">←</span><span>목차로</span></a>
       <span class="chapter-nav-label">CH04 · ELB · Auto Scaling</span>
       <div class="chapter-nav-actions">
-        <button class="complete-btn" id="completeBtn" data-chapter-id="ch04">
+        <button class="complete-btn" data-chapter-id="ch04">
           <span class="complete-icon">○</span><span class="complete-text">완료로 표시</span>
         </button>
       </div>
@@ -31,17 +31,18 @@
           CHAPTER 04 · 핵심 서비스
         </div>
         <h1 class="chapter-hero-title">ELB · Auto Scaling</h1>
-        <p class="chapter-hero-subtitle">고가용성 달성 — 서버가 죽어도 서비스는 살아있어야 한다</p>
+        <p class="chapter-hero-subtitle">고가용성과 자동 확장 — 서버가 죽어도 서비스는 계속되어야 한다</p>
         <div class="chapter-hero-tags">
           <span class="tag tag-cat-core">핵심 서비스</span>
-          <span class="tag tag-billing">시간당 과금</span>
+          <span class="tag tag-billing">사용량 과금</span>
         </div>
-        <p class="chapter-hero-services">ALB · NLB · 대상 그룹 · 리스너 · 헬스 체크 · ASG · 시작 템플릿 · 스케일링 정책</p>
+        <p class="chapter-hero-services">ALB · NLB · 리스너 · 규칙 · 대상 그룹 · 헬스 체크 · 시작 템플릿 · ASG · 스케일링 정책 · 인스턴스 워밍업</p>
       </div>
       <div class="chapter-info-card">
         <div class="info-card-title">CHAPTER INFO</div>
-        <div class="info-card-item"><span class="info-icon">⚖️</span><span>고가용성 아키텍처 핵심</span></div>
-        <div class="info-card-item"><span class="info-icon">💰</span><span>ALB 시간당 + LCU 과금</span></div>
+        <div class="info-card-item"><span class="info-icon">⚖️</span><span>로드 분산과 장애 격리</span></div>
+        <div class="info-card-item"><span class="info-icon">📈</span><span>트래픽에 맞춘 자동 확장</span></div>
+        <div class="info-card-item"><span class="info-icon">💰</span><span>로드밸런서 사용 시간·처리량 과금</span></div>
         <div class="info-card-item"><span class="info-icon">🔗</span><span>이전: CH03 Amazon VPC</span></div>
         <div class="info-card-item"><span class="info-icon">🔗</span><span>다음: CH05 Amazon S3</span></div>
       </div>
@@ -54,137 +55,234 @@
     <main class="chapter-content">
 
       <section class="content-section" id="why">
-        <div class="section-label">01</div>
+        <div class="section-label">개념 01</div>
         <h2>왜 로드밸런서가 필요한가</h2>
-        <p>서버 한 대에 모든 트래픽을 보내면 두 가지 문제가 생깁니다. 첫째, 서버가 죽으면 서비스 전체가 죽습니다. 둘째, 트래픽이 몰리면 한 서버가 버텨야 합니다.</p>
-        <p>ELB(Elastic Load Balancer)는 <strong>여러 서버 앞에 세워서 트래픽을 나눠주는 장치</strong>입니다. 하나가 죽으면 나머지로만 보내고, 트래픽이 늘면 Auto Scaling이 서버를 더 만들어 붙입니다.</p>
+        <p>서버 한 대만 운영하면 그 서버가 장애를 일으키는 순간 서비스 전체가 중단될 수 있습니다. 또 트래픽이 증가해도 한 대가 모든 요청을 감당해야 합니다.</p>
+        <p><strong>Elastic Load Balancing(ELB)</strong>은 여러 대상에 요청을 분산하고, 헬스 체크에 실패한 대상에는 새 요청을 보내지 않습니다. 여기에 <strong>EC2 Auto Scaling</strong>을 연결하면 필요한 인스턴스 수까지 자동으로 조절할 수 있습니다.</p>
 
-        <div class="diagram-card">
-          <div class="diagram-header">⚖️ ELB + Auto Scaling 구조</div>
-          <div class="diagram-body">
-            <div style="display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap">
-              <div class="dns-node"><div class="dns-node-icon">🌐</div><span>사용자</span></div>
-              <div class="dns-arrow">→</div>
-              <div class="dns-node"><div class="dns-node-icon" style="background:var(--cat-basics-bg);border-color:var(--cat-basics-h)">⚖️</div><span>ALB<br><small>443/80</small></span></div>
-              <div class="dns-arrow">→</div>
-              <div style="display:flex;flex-direction:column;gap:6px">
-                <div class="dns-node"><div class="dns-node-icon">🖥</div><span>EC2 #1</span></div>
-                <div class="dns-node"><div class="dns-node-icon">🖥</div><span>EC2 #2</span></div>
-                <div class="dns-node"><div class="dns-node-icon" style="background:#EBFBEE;border-color:#087F3E">🖥</div><span>EC2 #3<br><small>ASG가 추가</small></span></div>
-              </div>
-            </div>
-          </div>
+        <div class="flow-diagram">
+          <div class="flow-step"><span class="flow-step-icon">🌐</span><span class="flow-step-label">사용자</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><span class="flow-step-icon">⚖️</span><span class="flow-step-label">ALB</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><span class="flow-step-icon">🖥️</span><span class="flow-step-label">EC2 #1</span></div>
+          <div class="flow-step"><span class="flow-step-icon">🖥️</span><span class="flow-step-label">EC2 #2</span></div>
+          <div class="flow-step"><span class="flow-step-icon">➕</span><span class="flow-step-label">ASG가 증감</span></div>
+        </div>
+
+        <div class="callout callout-tip">
+          <span class="callout-icon">💡</span>
+          <div class="callout-body"><strong>고가용성은 “큰 서버 1대”가 아니라 “여러 장애 단위에 분산”하는 설계입니다.</strong><br>일반적인 웹 서비스는 서로 다른 AZ의 여러 대상에 트래픽을 분산해 한 AZ나 한 인스턴스의 장애 영향을 줄입니다.</div>
         </div>
       </section>
 
-      <section class="content-section" id="alb">
-        <div class="section-label">02</div>
-        <h2>ALB vs NLB — 언제 뭘 쓰나</h2>
+      <section class="content-section" id="types">
+        <div class="section-label">개념 02</div>
+        <h2>ALB vs NLB — 언제 무엇을 쓰나</h2>
 
         <div class="content-table-wrap">
           <table class="content-table">
-            <thead><tr><th>구분</th><th>ALB (Application LB)</th><th>NLB (Network LB)</th></tr></thead>
+            <thead><tr><th>구분</th><th>ALB</th><th>NLB</th></tr></thead>
             <tbody>
-              <tr><td>OSI 계층</td><td>L7 (HTTP/HTTPS)</td><td>L4 (TCP/UDP)</td></tr>
-              <tr><td>라우팅 기준</td><td>URL 경로, 헤더, 호스트명</td><td>IP + 포트</td></tr>
-              <tr><td>고정 IP</td><td>없음 (DNS만)</td><td>있음 (탄력적 IP)</td></tr>
-              <tr><td>WebSocket</td><td>지원</td><td>지원</td></tr>
-              <tr><td>주 용도</td><td>웹·API 서버 (대부분)</td><td>게임·IoT·고성능 TCP</td></tr>
-              <tr><td>요금</td><td>시간당 $0.0225 + LCU</td><td>시간당 $0.0225 + NLCU</td></tr>
+              <tr><td>주요 계층</td><td>L7 — HTTP/HTTPS</td><td>L4 — TCP/UDP/TLS</td></tr>
+              <tr><td>라우팅</td><td>호스트, 경로, 헤더, 쿼리 등 애플리케이션 조건</td><td>IP와 포트 중심의 네트워크 연결</td></tr>
+              <tr><td>대상 유형</td><td>인스턴스, IP, Lambda 등</td><td>인스턴스, IP, ALB 등 지원 유형</td></tr>
+              <tr><td>고정 IP 요구</td><td>DNS 이름 사용이 기본</td><td>AZ별 고정 IP 특성을 활용 가능, 인터넷용은 EIP 지정 가능</td></tr>
+              <tr><td>대표 용도</td><td>웹, REST API, 마이크로서비스</td><td>고성능 TCP/UDP, 고정 IP가 필요한 연결</td></tr>
             </tbody>
           </table>
         </div>
 
-        <p>Spring Boot REST API 서버라면 <strong>ALB</strong>를 쓰세요. URL 경로 기반 라우팅(<code>/api/*</code> → 백엔드, <code>/*</code> → 프론트엔드)이 가능하고, HTTPS 인증서를 여기서 처리합니다.</p>
+        <div class="callout callout-tip">
+          <span class="callout-icon">💡</span>
+          <div class="callout-body"><strong>일반 웹·API라면 ALB부터 생각하면 됩니다.</strong><br>예를 들어 <code>api.example.com</code>은 API 대상 그룹으로, <code>/admin/*</code>은 관리자 대상 그룹으로 보내는 식의 L7 라우팅이 가능합니다.</div>
+        </div>
+
+        <div class="callout callout-warn">
+          <span class="callout-icon">💰</span>
+          <div class="callout-body"><strong>로드밸런서는 과금 리소스입니다.</strong><br>시간과 처리 용량 단위에 따라 비용이 발생하며 정확한 금액은 리전과 현재 AWS 가격표에 따라 달라집니다. 실습용 로드밸런서는 끝나면 삭제합니다.</div>
+        </div>
       </section>
 
       <section class="content-section" id="components">
-        <div class="section-label">03</div>
+        <div class="section-label">개념 03</div>
         <h2>ALB 구성 요소</h2>
 
         <div class="content-table-wrap">
           <table class="content-table">
-            <thead><tr><th>구성 요소</th><th>역할</th></tr></thead>
+            <thead><tr><th>구성 요소</th><th>역할</th><th>예시</th></tr></thead>
             <tbody>
-              <tr><td><strong>리스너</strong></td><td>어떤 포트(80, 443)로 들어오는 트래픽을 받을지. 규칙에 따라 대상 그룹으로 전달</td></tr>
-              <tr><td><strong>규칙</strong></td><td>URL 경로, 헤더 등 조건에 따라 다른 대상 그룹으로 라우팅</td></tr>
-              <tr><td><strong>대상 그룹</strong></td><td>트래픽을 받을 EC2 인스턴스(또는 Lambda, IP) 묶음</td></tr>
-              <tr><td><strong>헬스 체크</strong></td><td>대상 그룹의 인스턴스가 살아있는지 주기적으로 확인. unhealthy면 트래픽 제외</td></tr>
+              <tr><td><strong>리스너</strong></td><td>어떤 프로토콜·포트로 연결을 받을지 정의</td><td>HTTP 80, HTTPS 443</td></tr>
+              <tr><td><strong>리스너 규칙</strong></td><td>조건에 따라 전달·리다이렉트·고정 응답 수행</td><td><code>/api/*</code> → API 대상 그룹</td></tr>
+              <tr><td><strong>대상 그룹</strong></td><td>실제 요청을 처리할 대상의 논리적 묶음</td><td>EC2 2대, 컨테이너 IP</td></tr>
+              <tr><td><strong>헬스 체크</strong></td><td>대상이 요청을 받을 수 있는 상태인지 주기적으로 검사</td><td><code>/health</code> 200 응답</td></tr>
             </tbody>
           </table>
         </div>
 
-        <div class="callout callout-warn">
-          <span class="callout-icon">⚠️</span>
-          <div class="callout-body">
-            <strong>헬스 체크 unhealthy — 가장 자주 막히는 지점</strong><br>
-            대상 그룹이 계속 unhealthy면 이 순서대로 확인하세요:<br>
-            1. 앱이 실제로 실행 중인가 (<code>systemctl status myapp</code>)<br>
-            2. 헬스 체크 경로(<code>/health</code>)가 200을 반환하는가<br>
-            3. EC2 보안 그룹이 ALB 보안 그룹에서 오는 트래픽을 허용하는가<br>
-            4. 헬스 체크 포트가 앱이 뜬 포트와 일치하는가
-          </div>
+        <h3>요청이 흘러가는 순서</h3>
+        <div class="flow-diagram">
+          <div class="flow-step"><span class="flow-step-icon">①</span><span class="flow-step-label">DNS로 ALB 도착</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><span class="flow-step-icon">②</span><span class="flow-step-label">리스너 수신</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><span class="flow-step-icon">③</span><span class="flow-step-label">규칙 평가</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><span class="flow-step-icon">④</span><span class="flow-step-label">Healthy 대상 전달</span></div>
+        </div>
+      </section>
+
+      <section class="content-section" id="health">
+        <div class="section-label">개념 04</div>
+        <h2>헬스 체크 — 살아있는 서버만 트래픽 받게 하기</h2>
+        <p>대상 그룹은 각 대상의 상태를 확인합니다. 일정 횟수 이상 실패하면 <strong>unhealthy</strong>로 판단해 로드밸런서의 정상 트래픽 대상에서 제외하고, 다시 성공 기준을 만족하면 복귀시킵니다.</p>
+
+        <div class="grid-2col">
+          <div class="info-box info-box-primary"><strong>좋은 헬스 체크</strong><br>애플리케이션이 실제 요청을 처리할 준비가 되었는지 빠르게 확인하고, 외부 시스템 장애에 지나치게 의존하지 않는 경량 엔드포인트를 사용합니다.</div>
+          <div class="info-box info-box-warn"><strong>주의할 헬스 체크</strong><br>DB·외부 API를 모두 호출하는 무거운 검사 하나에 의존하면 일시적인 외부 장애가 전체 서버를 unhealthy로 만들 수 있습니다.</div>
+        </div>
+
+        <h3>unhealthy일 때 확인 순서</h3>
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead><tr><th>순서</th><th>확인</th><th>대표 원인</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>앱 프로세스</td><td>애플리케이션 미기동 또는 재시작 반복</td></tr>
+              <tr><td>2</td><td>헬스 체크 경로·응답코드</td><td>경로 오타, 301/401/500 등 예상 외 응답</td></tr>
+              <tr><td>3</td><td>포트</td><td>대상 그룹 포트와 앱 리스닝 포트 불일치</td></tr>
+              <tr><td>4</td><td>보안 그룹</td><td>EC2가 ALB 보안 그룹의 트래픽을 허용하지 않음</td></tr>
+              <tr><td>5</td><td>네트워크 경로</td><td>NACL, 라우팅, 잘못된 대상 등록</td></tr>
+            </tbody>
+          </table>
         </div>
       </section>
 
       <section class="content-section" id="https">
         <div class="section-label">실습 01</div>
-        <h2>ALB + HTTPS 설정하기</h2>
+        <h2>ALB + HTTPS 구성 흐름</h2>
+        <p>HTTPS 웹 서비스를 구성할 때는 인증서, 리스너, 대상 그룹, 보안 그룹, DNS를 하나의 흐름으로 이해하면 쉽습니다.</p>
 
-        <ol style="font-size:15px;color:var(--text-2);line-height:2.2;padding-left:20px">
-          <li><strong>ACM 인증서 발급</strong>: Certificate Manager → 인증서 요청 → 도메인 입력 → DNS 검증 → Route 53에 레코드 자동 추가 → 발급 대기 (수 분)</li>
-          <li><strong>대상 그룹 생성</strong>: EC2 → 대상 그룹 → 생성 → 인스턴스 유형 → 포트 8080 → 헬스 체크 경로 <code>/health</code> → EC2 인스턴스 등록</li>
-          <li><strong>ALB 생성</strong>: EC2 → 로드 밸런서 → ALB 생성 → <strong>퍼블릭 서브넷 2개 이상 선택</strong> → ALB 전용 보안 그룹 생성(80·443 전체 허용)</li>
-          <li><strong>리스너 설정</strong>: HTTP(80) → HTTPS(443) 리다이렉트 규칙 / HTTPS(443) → 대상 그룹으로 전달 + ACM 인증서 선택</li>
-          <li><strong>EC2 보안 그룹 수정</strong>: 8080 포트 소스를 <strong>ALB 보안 그룹</strong>으로 지정 (0.0.0.0/0 제거)</li>
-          <li><strong>Route 53 연결</strong>: A 레코드 → ALIAS → ALB 선택</li>
-        </ol>
+        <div class="flow-diagram">
+          <div class="flow-step"><span class="flow-step-icon">①</span><span class="flow-step-label">ACM 인증서</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><span class="flow-step-icon">②</span><span class="flow-step-label">대상 그룹</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><span class="flow-step-icon">③</span><span class="flow-step-label">ALB 생성</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><span class="flow-step-icon">④</span><span class="flow-step-label">HTTPS 443</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><span class="flow-step-icon">⑤</span><span class="flow-step-label">DNS 연결</span></div>
+        </div>
+
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead><tr><th>단계</th><th>핵심 작업</th></tr></thead>
+            <tbody>
+              <tr><td>1. 인증서</td><td>ACM에서 서비스 도메인 인증서를 발급하고 DNS 등으로 도메인 소유권 검증</td></tr>
+              <tr><td>2. 대상 그룹</td><td>애플리케이션 포트와 헬스 체크 경로를 지정하고 대상 등록</td></tr>
+              <tr><td>3. ALB</td><td>인터넷 공개용이면 internet-facing으로 생성하고 서로 다른 AZ의 서브넷을 활성화</td></tr>
+              <tr><td>4. 리스너</td><td>HTTPS 443에 ACM 인증서를 연결하고 대상 그룹으로 전달. 필요하면 HTTP 80을 HTTPS로 리다이렉트</td></tr>
+              <tr><td>5. 보안 그룹</td><td>ALB는 필요한 외부 포트만, EC2 앱 포트는 소스를 ALB 보안 그룹으로 제한</td></tr>
+              <tr><td>6. DNS</td><td>Route 53 등 DNS에서 서비스 도메인을 ALB DNS 이름으로 연결</td></tr>
+            </tbody>
+          </table>
+        </div>
 
         <div class="callout callout-warn">
           <span class="callout-icon">⚠️</span>
-          <div class="callout-body">
-            <strong>ALB 서브넷은 최소 2개 · 서로 다른 AZ</strong><br>
-            ALB는 고가용성을 위해 2개 이상의 AZ에 걸쳐야 합니다. 같은 AZ의 서브넷 2개를 선택하면 오류가 납니다.
-          </div>
+          <div class="callout-body"><strong>외부 사용자가 EC2 앱 포트로 직접 들어오게 만들지 마세요.</strong><br>예를 들어 애플리케이션이 8080을 사용한다면 EC2 보안 그룹의 8080 소스를 <strong>ALB 보안 그룹</strong>으로 제한하는 패턴이 일반적입니다.</div>
         </div>
       </section>
 
       <section class="content-section" id="asg">
-        <div class="section-label">04</div>
-        <h2>Auto Scaling — 서버가 자동으로 늘고 줄어드는 원리</h2>
-        <p>Auto Scaling Group(ASG)은 EC2 인스턴스를 자동으로 추가하거나 제거하는 서비스입니다. CPU가 70%를 넘으면 서버를 추가하고, 30% 밑으로 내려가면 줄입니다.</p>
+        <div class="section-label">개념 05</div>
+        <h2>Auto Scaling Group — 인스턴스 수를 자동으로 유지</h2>
+        <p><strong>Auto Scaling Group(ASG)</strong>은 지정한 최소·최대·희망 용량 범위 안에서 EC2 인스턴스 수를 유지합니다. 인스턴스가 비정상이면 교체하고, 스케일링 정책에 따라 수를 늘리거나 줄일 수 있습니다.</p>
 
         <div class="content-table-wrap">
           <table class="content-table">
             <thead><tr><th>구성 요소</th><th>역할</th></tr></thead>
             <tbody>
-              <tr><td><strong>시작 템플릿</strong></td><td>새 인스턴스를 만들 때 쓸 설정 (AMI, 인스턴스 유형, 키 페어, 보안 그룹, 유저 데이터)</td></tr>
-              <tr><td><strong>최소/최대/희망 용량</strong></td><td>최소 2개, 최대 10개, 평소 2개 처럼 범위 설정</td></tr>
-              <tr><td><strong>스케일링 정책</strong></td><td>언제 늘리고 줄일지 기준 설정</td></tr>
-              <tr><td><strong>ALB 연동</strong></td><td>새로 만든 인스턴스를 자동으로 대상 그룹에 등록</td></tr>
+              <tr><td><strong>시작 템플릿</strong></td><td>AMI, 인스턴스 유형, 보안 그룹, IAM 역할, 유저 데이터 등 새 EC2의 생성 설정</td></tr>
+              <tr><td><strong>최소 용량</strong></td><td>ASG가 유지할 최소 인스턴스 수</td></tr>
+              <tr><td><strong>희망 용량</strong></td><td>현재 유지하려는 목표 인스턴스 수</td></tr>
+              <tr><td><strong>최대 용량</strong></td><td>자동 확장할 수 있는 상한</td></tr>
+              <tr><td><strong>대상 그룹 연결</strong></td><td>ASG가 만든 인스턴스를 로드밸런서 대상 그룹에 자동 등록</td></tr>
             </tbody>
           </table>
         </div>
 
-        <h3>스케일링 정책 종류</h3>
+        <div class="callout callout-tip">
+          <span class="callout-icon">💡</span>
+          <div class="callout-body"><strong>ASG가 있다고 자동으로 “CPU 70%면 1대 추가”되는 것은 아닙니다.</strong><br>최소·희망·최대 용량은 인스턴스 수의 경계이고, 실제 증감 조건은 별도의 스케일링 정책에서 정합니다.</div>
+        </div>
+      </section>
+
+      <section class="content-section" id="policy">
+        <div class="section-label">개념 06</div>
+        <h2>스케일링 정책과 워밍업</h2>
+
         <div class="content-table-wrap">
           <table class="content-table">
-            <thead><tr><th>정책</th><th>작동 방식</th><th>권장 상황</th></tr></thead>
+            <thead><tr><th>정책</th><th>작동 방식</th><th>적합한 상황</th></tr></thead>
             <tbody>
-              <tr><td>타깃 추적</td><td>CPU 70% 유지처럼 목표값을 정하면 자동 조정</td><td>대부분의 경우 (권장)</td></tr>
-              <tr><td>단계 스케일링</td><td>CPU 60~80% → 1개 추가, 80%+ → 2개 추가</td><td>세밀한 제어 필요 시</td></tr>
-              <tr><td>예약 스케일링</td><td>매주 월요일 9시 → 서버 5개로 확장</td><td>트래픽 패턴이 예측 가능할 때</td></tr>
+              <tr><td><strong>Target Tracking</strong></td><td>평균 CPU나 ALB 요청량 같은 지표를 목표값 근처로 유지하도록 자동 조정</td><td>대부분의 일반 서비스</td></tr>
+              <tr><td><strong>Step Scaling</strong></td><td>알람의 초과 정도에 따라 서로 다른 증감 폭 적용</td><td>임계값별 세밀한 제어</td></tr>
+              <tr><td><strong>Scheduled Scaling</strong></td><td>정해진 시간에 미리 용량 변경</td><td>출근 시간·이벤트 등 예측 가능한 패턴</td></tr>
+              <tr><td><strong>Predictive Scaling</strong></td><td>과거 패턴을 바탕으로 필요한 용량을 예측해 준비</td><td>반복성이 있는 대규모 트래픽 패턴</td></tr>
             </tbody>
           </table>
         </div>
 
+        <h3>인스턴스 워밍업이 필요한 이유</h3>
+        <p>새 EC2는 생성 직후 바로 정상 부하를 처리하지 못할 수 있습니다. OS 부팅, 애플리케이션 시작, JVM 워밍업, 캐시 준비 시간이 필요하기 때문입니다. <strong>인스턴스 워밍업</strong>을 고려하지 않으면 새 서버가 준비되기도 전에 지표가 다시 악화되어 불필요한 추가 확장이 반복될 수 있습니다.</p>
+
+        <div class="grid-2col">
+          <div class="info-box info-box-primary"><strong>Scale Out</strong><br>사용량 증가 → 새 인스턴스 생성 → 헬스 체크 통과 → 대상 그룹에서 트래픽 수신.</div>
+          <div class="info-box info-box-success"><strong>Scale In</strong><br>부하 감소 → 필요 없는 인스턴스 축소. 너무 공격적인 축소는 재확장을 반복하는 진동을 만들 수 있으므로 정책을 안정적으로 잡습니다.</div>
+        </div>
+      </section>
+
+      <section class="content-section" id="design">
+        <div class="section-label">개념 07</div>
+        <h2>실무 설계 — ALB + ASG + Multi-AZ</h2>
+
+        <div class="flow-diagram">
+          <div class="flow-step"><span class="flow-step-icon">🌐</span><span class="flow-step-label">인터넷</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><span class="flow-step-icon">⚖️</span><span class="flow-step-label">ALB · 2+ AZ</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><span class="flow-step-icon">🖥️</span><span class="flow-step-label">ASG · AZ-a</span></div>
+          <div class="flow-step"><span class="flow-step-icon">🖥️</span><span class="flow-step-label">ASG · AZ-b</span></div>
+        </div>
+
+        <div class="content-table-wrap">
+          <table class="content-table">
+            <thead><tr><th>설계 포인트</th><th>이유</th></tr></thead>
+            <tbody>
+              <tr><td>서로 다른 AZ 사용</td><td>하나의 AZ 장애가 전체 서비스 장애로 이어지는 위험을 줄임</td></tr>
+              <tr><td>앱 서버는 직접 인터넷 노출 최소화</td><td>외부 진입점을 ALB로 집중해 보안 정책 단순화</td></tr>
+              <tr><td>세션을 서버 로컬에만 저장하지 않기</td><td>어느 인스턴스로 요청이 가도 동일한 사용자 상태를 처리하도록 설계</td></tr>
+              <tr><td>시작 템플릿 자동화</td><td>새 인스턴스가 사람 손 없이 동일한 상태로 시작되어야 Auto Scaling이 의미 있음</td></tr>
+              <tr><td>CloudWatch 지표 관찰</td><td>CPU만이 아니라 요청 수, 응답 시간, 오류율 등 실제 병목과 맞는 지표 선택</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="content-section" id="summary">
+        <div class="section-label">핵심 정리</div>
+        <h2>CH04 핵심 개념 요약</h2>
         <div class="summary-card">
-          <div class="summary-card-title">📌 CH04 핵심 개념 요약</div>
-          <div class="summary-item"><span class="summary-term">ALB</span><span>L7 로드밸런서. URL·헤더 기반 라우팅. HTTPS 인증서 처리. 웹·API 서버에 적합</span></div>
-          <div class="summary-item"><span class="summary-term">대상 그룹</span><span>트래픽을 받을 EC2 묶음. 헬스 체크로 unhealthy 자동 제외</span></div>
-          <div class="summary-item"><span class="summary-term">헬스 체크 실패</span><span>앱 실행 여부 → 경로 200 반환 → EC2 보안 그룹 → 포트 순서로 확인</span></div>
-          <div class="summary-item"><span class="summary-term">ASG</span><span>CPU 등 지표에 따라 인스턴스 자동 추가/제거. ALB와 연동해 새 서버 자동 등록</span></div>
-          <div class="summary-item"><span class="summary-term">ALB 주의</span><span>서로 다른 AZ의 서브넷 최소 2개. EC2 보안 그룹 소스를 ALB 보안 그룹으로</span></div>
+          <div class="summary-card-title">📌 ELB · Auto Scaling 한눈에 보기</div>
+          <div class="summary-item"><span class="summary-term">ALB</span><span>L7 HTTP/HTTPS 로드밸런서. 애플리케이션 조건 기반 라우팅에 적합.</span></div>
+          <div class="summary-item"><span class="summary-term">NLB</span><span>L4 TCP/UDP/TLS 중심. 고성능 네트워크 연결이나 고정 IP 요구에 활용.</span></div>
+          <div class="summary-item"><span class="summary-term">리스너</span><span>수신 프로토콜·포트와 전달 규칙의 시작점.</span></div>
+          <div class="summary-item"><span class="summary-term">대상 그룹</span><span>실제 요청을 처리할 대상 묶음. 헬스 체크 상태와 연결.</span></div>
+          <div class="summary-item"><span class="summary-term">헬스 체크</span><span>비정상 대상을 트래픽에서 제외하고 회복 시 다시 포함.</span></div>
+          <div class="summary-item"><span class="summary-term">ASG</span><span>최소·희망·최대 범위에서 인스턴스 수를 유지하고 비정상 인스턴스를 교체.</span></div>
+          <div class="summary-item"><span class="summary-term">Scaling Policy</span><span>Target Tracking, Step, Scheduled, Predictive 방식으로 용량 증감을 결정.</span></div>
+          <div class="summary-item"><span class="summary-term">Warmup</span><span>새 인스턴스가 실제 부하를 받을 준비가 될 때까지의 시간을 정책에 반영.</span></div>
         </div>
       </section>
 
@@ -197,7 +295,7 @@
         <a href="/chapters/ch05/" class="pag-link pag-next">
           <span class="pag-dir">다음 챕터 →</span>
           <span class="pag-title">CH05 Amazon S3</span>
-          <span class="pag-sub">클라우드 오브젝트 스토리지</span>
+          <span class="pag-sub">객체 스토리지</span>
         </a>
       </div>
 
@@ -207,11 +305,15 @@
       <div class="toc-card">
         <div class="toc-title">이 챕터의 목차</div>
         <ul class="toc-list">
-          <li><a href="#why" class="toc-link">01 · 왜 로드밸런서가 필요한가</a></li>
-          <li><a href="#alb" class="toc-link">02 · ALB vs NLB</a></li>
-          <li><a href="#components" class="toc-link">03 · ALB 구성 요소</a></li>
-          <li><a href="#https" class="toc-link">실습 · ALB + HTTPS</a></li>
-          <li><a href="#asg" class="toc-link">04 · Auto Scaling</a></li>
+          <li><a href="#why" class="toc-link">개념 01 · 로드밸런서가 필요한 이유</a></li>
+          <li><a href="#types" class="toc-link">개념 02 · ALB vs NLB</a></li>
+          <li><a href="#components" class="toc-link">개념 03 · ALB 구성 요소</a></li>
+          <li><a href="#health" class="toc-link">개념 04 · 헬스 체크</a></li>
+          <li><a href="#https" class="toc-link">실습 01 · ALB + HTTPS</a></li>
+          <li><a href="#asg" class="toc-link">개념 05 · Auto Scaling Group</a></li>
+          <li><a href="#policy" class="toc-link">개념 06 · 스케일링 정책</a></li>
+          <li><a href="#design" class="toc-link">개념 07 · 실무 설계</a></li>
+          <li><a href="#summary" class="toc-link">핵심 정리</a></li>
         </ul>
       </div>
     </aside>
