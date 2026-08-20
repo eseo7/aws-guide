@@ -94,6 +94,82 @@
     });
   }
 
+  /* ── Chapter quality hardening ─────────────────────── */
+  function enhanceChapterQuality() {
+    var btn = document.querySelector('.complete-btn[data-chapter-id]');
+    if (!btn) return;
+    var chId = btn.dataset.chapterId;
+
+    /* CH08: keep summary aligned with all taught sections */
+    if (chId === 'ch08') {
+      var summary = document.querySelector('.summary-card');
+      if (summary) {
+        var terms = Array.prototype.map.call(summary.querySelectorAll('.summary-term'), function (el) {
+          return el.textContent.trim();
+        });
+        var missing = [
+          ['Dashboards', '여러 지표와 경보를 한 화면에 묶어 서비스 상태를 빠르게 판단하는 운영 화면'],
+          ['Runbook', '경보 발생 시 영향 범위 → 사용자 지표 → 인프라 → 로그 → 변경 이력 → 복구 확인 순서로 대응']
+        ];
+        missing.forEach(function (item) {
+          if (terms.indexOf(item[0]) !== -1) return;
+          var row = document.createElement('div');
+          row.className = 'summary-item';
+          var term = document.createElement('span');
+          term.className = 'summary-term';
+          term.textContent = item[0];
+          var desc = document.createElement('span');
+          desc.textContent = item[1];
+          row.appendChild(term);
+          row.appendChild(desc);
+          summary.appendChild(row);
+        });
+      }
+    }
+
+    /* Paid/practical chapters: always leave the learner with a cleanup checkpoint. */
+    var cleanup = {
+      ch02: 'EC2 인스턴스 종료 여부와 남은 EBS 볼륨·스냅샷·Elastic IP를 확인하세요.',
+      ch03: 'NAT Gateway와 Elastic IP 등 시간당 또는 사용량 과금 리소스를 우선 확인하고, 실습용 VPC 구성요소를 정리하세요.',
+      ch04: 'ALB와 Auto Scaling이 만든 EC2 인스턴스가 남아 있지 않은지 확인하고 실습용 로드밸런서·대상 그룹을 정리하세요.',
+      ch05: '실습 버킷의 객체·버전·불완전 멀티파트 업로드와 연결한 CloudFront 구성을 확인하세요.',
+      ch06: 'RDS/Aurora 인스턴스와 클러스터를 종료하고, 보관할 필요가 없는 스냅샷·Secrets Manager 비밀정보 등 후속 리소스도 확인하세요.',
+      ch07: '실습용 Route 53 Hosted Zone과 CloudFront 배포가 계속 필요한지 확인하세요. 사용하지 않는 구성은 정리하세요.',
+      ch08: '불필요한 로그 장기 보존, 커스텀 지표, 경보·대시보드가 남아 있지 않은지 확인하고 Log Group 보존 기간을 점검하세요.',
+      ch09: '실습용 빌드·배포 파이프라인, 아티팩트 저장소와 배포 대상으로 만든 인프라가 남아 있지 않은지 확인하세요.',
+      ch10: '종합 실습에서 만든 ALB·EC2·RDS·NAT Gateway·CloudFront 등 유료 리소스를 의존성 순서에 맞춰 모두 정리했는지 마지막으로 확인하세요.'
+    };
+
+    if (cleanup[chId] && !document.querySelector('.lab-cleanup-check')) {
+      var pagination = document.querySelector('.chapter-pagination');
+      if (pagination && pagination.parentNode) {
+        var box = document.createElement('div');
+        box.className = 'callout callout-danger lab-cleanup-check';
+
+        var icon = document.createElement('span');
+        icon.className = 'callout-icon';
+        icon.textContent = '💰';
+
+        var body = document.createElement('div');
+        body.className = 'callout-body';
+        var strong = document.createElement('strong');
+        strong.textContent = '실습 종료 체크 — 비용이 계속 발생하지 않게 확인하세요.';
+        body.appendChild(strong);
+        body.appendChild(document.createElement('br'));
+        body.appendChild(document.createTextNode(cleanup[chId]));
+        body.appendChild(document.createElement('br'));
+        var note = document.createElement('span');
+        note.className = 'text-muted';
+        note.textContent = 'AWS 요금과 Free Tier 조건은 계정·리전·시점에 따라 달라질 수 있으므로 콘솔의 Billing/Cost Management에서 실제 사용량도 함께 확인합니다.';
+        body.appendChild(note);
+
+        box.appendChild(icon);
+        box.appendChild(body);
+        pagination.parentNode.insertBefore(box, pagination);
+      }
+    }
+  }
+
   /* ── Update all progress UI ─────────────────────────── */
   function renderProgress(completed) {
     var unique = normalizeCompleted(completed);
@@ -184,6 +260,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     normalizeHomePricingLabels();
     normalizeHomeCardSummaries();
+    enhanceChapterQuality();
     renderProgress(getCompleted());
     initCompleteBtn();
     initToc();
