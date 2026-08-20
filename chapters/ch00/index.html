@@ -18,7 +18,7 @@
       </a>
       <span class="chapter-nav-label">CH 00 / 12</span>
       <div class="chapter-nav-actions">
-        <button class="complete-btn" data-chapter="ch00">완료로 표시</button>
+        <button class="complete-btn" data-chapter-id="ch00"><span class="complete-icon">○</span><span class="complete-text">완료로 표시</span></button>
       </div>
     </div>
   </div>
@@ -40,7 +40,7 @@
           <span class="tag tag-free">과금 없음</span>
           <span class="tag tag-neutral">읽기 전용</span>
         </div>
-        <p class="chapter-hero-services">OSI 7 Layer · DNS · 캐싱 · 암호화/SSL · RDBMS vs NoSQL</p>
+        <p class="chapter-hero-services">OSI 7 Layer · DNS · 캐싱 · 암호화/TLS · RDBMS vs NoSQL</p>
       </div>
       <aside class="chapter-info-card">
         <div class="info-card-title">챕터 정보</div>
@@ -173,7 +173,7 @@
             <tbody>
               <tr><td>연결 방식</td><td>연결 수립 후 통신 (3-way handshake)</td><td>연결 없이 바로 전송</td></tr>
               <tr><td>신뢰성</td><td>순서 보장, 재전송 있음</td><td>순서 보장 없음, 재전송 없음</td></tr>
-              <tr><td>속도</td><td>상대적으로 느림</td><td>빠름</td></tr>
+              <tr><td>전송 특성</td><td>연결·재전송 등 제어 오버헤드가 상대적으로 큼</td><td>제어 오버헤드가 작아 지연에 유리할 수 있음</td></tr>
               <tr><td>사용처</td><td>HTTP, HTTPS, SSH, DB 연결</td><td>DNS, 영상 스트리밍, 게임</td></tr>
             </tbody>
           </table>

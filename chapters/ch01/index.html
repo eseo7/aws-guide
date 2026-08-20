@@ -137,7 +137,7 @@
           </div>
         </div>
 
-        <p>AWS의 대부분 서비스는 <strong>IaaS</strong>입니다. EC2는 가상 서버를 빌려주지만 그 위에 무엇을 설치하고 어떻게 운영할지는 내가 결정합니다. 반면 Lambda는 코드만 올리면 실행해주는 PaaS에 가깝습니다.</p>
+        <p>AWS에는 <strong>IaaS·PaaS에 가까운 서비스와 완전관리형 서비스가 함께</strong> 있습니다. EC2는 사용자가 OS와 애플리케이션을 관리하는 IaaS의 대표 예이고, Lambda는 서버 운영 부담을 크게 줄인 서버리스 컴퓨팅 서비스입니다. 서비스마다 사용자가 책임지는 범위가 다르므로 IaaS/PaaS/SaaS 분류는 이해를 돕는 기준으로 사용합니다.</p>
 
         <h3>온프레미스 vs 클라우드</h3>
         <div class="content-table-wrap">
@@ -146,7 +146,7 @@
               <tr><th>구분</th><th>온프레미스</th><th>클라우드</th></tr>
             </thead>
             <tbody>
-              <tr><td>초기 비용</td><td>높음 (서버 구매)</td><td>없음 (사용한 만큼)</td></tr>
+              <tr><td>초기 비용</td><td>높음 (서버 구매)</td><td>서버 구매 선투자는 줄일 수 있으나 사용한 AWS 리소스 비용은 발생</td></tr>
               <tr><td>확장 속도</td><td>느림 (주문·설치 수주)</td><td>빠름 (분 단위)</td></tr>
               <tr><td>유지 관리</td><td>직접 (하드웨어 고장 대응)</td><td>AWS가 대부분 처리</td></tr>
               <tr><td>데이터 위치</td><td>내 건물</td><td>AWS 데이터센터</td></tr>
@@ -158,8 +158,8 @@
         <div class="callout callout-tip">
           <span class="callout-icon">🏨</span>
           <div class="callout-body">
-            <strong>파르나스 호텔 기준으로 보면</strong><br>
-            VMC(VMware Cloud) 환경에서 EC2로 마이그레이션하는 작업이 바로 온프레미스(VMC) → IaaS(EC2) 전환입니다. 서버 자체를 관리하는 부담은 줄고, OS 위의 애플리케이션 운영은 그대로 내 책임입니다.
+            <strong>VMC → EC2 전환을 예로 보면</strong><br>
+            VMC(VMware Cloud)도 이미 클라우드 환경입니다. VMC에서 EC2로 옮기는 작업은 “온프레미스 → 클라우드”가 아니라 <strong>VMware 기반 클라우드 → AWS 네이티브 IaaS로 가상 서버 플랫폼을 전환</strong>하는 사례로 이해하는 것이 정확합니다.
           </div>
         </div>
       </section>
@@ -202,7 +202,7 @@
           </div>
         </div>
 
-        <p>AWS는 자체 개발한 <strong>Nitro System</strong>을 하이퍼바이저로 사용합니다. EC2 인스턴스는 서로 완전히 격리돼 있어서, 같은 물리 서버에 있는 다른 고객의 인스턴스에 접근할 수 없습니다.</p>
+        <p>현대 EC2 인스턴스의 많은 유형은 <strong>AWS Nitro System</strong> 위에서 동작합니다. Nitro System은 전용 하드웨어와 경량 <strong>Nitro Hypervisor</strong> 등을 조합해 가상화 기능을 분담하고, 인스턴스 간 격리와 성능을 제공합니다.</p>
 
         <div class="callout callout-tip">
           <span class="callout-icon">💡</span>
