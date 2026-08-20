@@ -1,0 +1,144 @@
+name: Normalize CH00-CH02 source
+
+on:
+  push:
+    paths:
+      - '.github/workflows/normalize-ch00-ch02.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Normalize learning source
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace(path, old, new, required=True):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              if old not in text:
+                  if required:
+                      raise SystemExit(f'Missing expected text in {path}: {old[:80]!r}')
+                  return
+              p.write_text(text.replace(old, new), encoding='utf-8')
+
+          # CH00 — source markup + terminology
+          replace('chapters/ch00/index.html',
+                  '<button class="complete-btn" data-chapter="ch00">완료로 표시</button>',
+                  '<button class="complete-btn" data-chapter-id="ch00"><span class="complete-icon">○</span><span class="complete-text">완료로 표시</span></button>')
+          replace('chapters/ch00/index.html', '암호화/SSL', '암호화/TLS')
+          replace('chapters/ch00/index.html',
+                  '<tr><td>속도</td><td>상대적으로 느림</td><td>빠름</td></tr>',
+                  '<tr><td>전송 특성</td><td>연결·재전송 등 제어 오버헤드가 상대적으로 큼</td><td>제어 오버헤드가 작아 지연에 유리할 수 있음</td></tr>')
+
+          # CH01 — cloud classification / VMC / Nitro / cost wording
+          replace('chapters/ch01/index.html',
+                  '<p>AWS의 대부분 서비스는 <strong>IaaS</strong>입니다. EC2는 가상 서버를 빌려주지만 그 위에 무엇을 설치하고 어떻게 운영할지는 내가 결정합니다. 반면 Lambda는 코드만 올리면 실행해주는 PaaS에 가깝습니다.</p>',
+                  '<p>AWS에는 <strong>IaaS·PaaS에 가까운 서비스와 완전관리형 서비스가 함께</strong> 있습니다. EC2는 사용자가 OS와 애플리케이션을 관리하는 IaaS의 대표 예이고, Lambda는 서버 운영 부담을 크게 줄인 서버리스 컴퓨팅 서비스입니다. 서비스마다 사용자가 책임지는 범위가 다르므로 IaaS/PaaS/SaaS 분류는 이해를 돕는 기준으로 사용합니다.</p>')
+          replace('chapters/ch01/index.html',
+                  '<strong>파르나스 호텔 기준으로 보면</strong><br>\n            VMC(VMware Cloud) 환경에서 EC2로 마이그레이션하는 작업이 바로 온프레미스(VMC) → IaaS(EC2) 전환입니다. 서버 자체를 관리하는 부담은 줄고, OS 위의 애플리케이션 운영은 그대로 내 책임입니다.',
+                  '<strong>VMC → EC2 전환을 예로 보면</strong><br>\n            VMC(VMware Cloud)도 이미 클라우드 환경입니다. VMC에서 EC2로 옮기는 작업은 “온프레미스 → 클라우드”가 아니라 <strong>VMware 기반 클라우드 → AWS 네이티브 IaaS로 가상 서버 플랫폼을 전환</strong>하는 사례로 이해하는 것이 정확합니다.')
+          replace('chapters/ch01/index.html',
+                  '<p>AWS는 자체 개발한 <strong>Nitro System</strong>을 하이퍼바이저로 사용합니다. EC2 인스턴스는 서로 완전히 격리돼 있어서, 같은 물리 서버에 있는 다른 고객의 인스턴스에 접근할 수 없습니다.</p>',
+                  '<p>현대 EC2 인스턴스의 많은 유형은 <strong>AWS Nitro System</strong> 위에서 동작합니다. Nitro System은 전용 하드웨어와 경량 <strong>Nitro Hypervisor</strong> 등을 조합해 가상화 기능을 분담하고, 인스턴스 간 격리와 성능을 제공합니다.</p>')
+          replace('chapters/ch01/index.html',
+                  '<tr><td>초기 비용</td><td>높음 (서버 구매)</td><td>없음 (사용한 만큼)</td></tr>',
+                  '<tr><td>초기 비용</td><td>높음 (서버 구매)</td><td>서버 구매 선투자는 줄일 수 있으나 사용한 AWS 리소스 비용은 발생</td></tr>')
+
+          # CH02 — current pricing/lifecycle/security guidance
+          replace('chapters/ch02/index.html',
+                  '<p>AWS 데이터센터의 물리 서버를 <strong>Nitro System(하이퍼바이저)</strong>이 여러 개의 독립된 가상 머신으로 나눕니다. 내 EC2는 다른 고객의 EC2와 같은 물리 서버에 있을 수 있지만 완전히 격리돼 있어서 서로 접근할 수 없습니다.</p>',
+                  '<p>많은 현대 EC2 인스턴스는 <strong>AWS Nitro System</strong>의 전용 하드웨어와 경량 Nitro Hypervisor를 기반으로 가상화됩니다. 같은 물리 호스트를 공유할 수 있어도 AWS의 가상화·보안 경계로 고객 인스턴스는 서로 격리됩니다.</p>')
+          replace('chapters/ch02/index.html', '<th>서울 시간당</th>', '<th>가격</th>')
+          for price in ['$0.013', '$0.026', '$0.052', '$0.104', '$0.112', '$0.224']:
+              replace('chapters/ch02/index.html', f'<td>{price}</td>', '<td>현재 AWS 가격표 확인</td>')
+          replace('chapters/ch02/index.html', '학습용, 프리 티어', '학습용, 계정 혜택 확인')
+          replace('chapters/ch02/index.html', 'Spring Boot 권장 최소', '예시 사양 — 부하 테스트로 결정')
+          replace('chapters/ch02/index.html',
+                  '<strong>t3.micro로 Spring Boot 실행하면?</strong><br>\n            메모리 1GB는 Spring Boot 기동도 빡빡합니다. JVM 힙 기본값이 256~512MB인데, OS와 기타 프로세스까지 합치면 금방 찹니다. 실제 서비스에는 최소 <strong>t3.medium(4GB)</strong>을 권장합니다. 파르나스처럼 HikariCP + Tomcat 스레드풀이 올라가는 환경이면 t3.large 이상도 고려하세요.',
+                  '<strong>Spring Boot 인스턴스 크기는 고정 정답이 없습니다.</strong><br>\n            1GB 메모리의 t3.micro는 JVM·OS·에이전트 구성을 함께 올리면 여유가 작을 수 있습니다. 하지만 “운영은 최소 t3.medium”처럼 고정하기보다 <strong>JVM 힙, 동시 요청, 커넥션 풀, 모니터링 지표와 부하 테스트</strong>를 기준으로 크기를 결정하고 필요하면 Auto Scaling과 함께 조정합니다.')
+          replace('chapters/ch02/index.html', '<tr><td><code>t3.micro</code></td><td>10%</td><td>6</td><td>144</td></tr>', '<tr><td><code>t3.micro</code></td><td>10%</td><td>12</td><td>288</td></tr>')
+          replace('chapters/ch02/index.html', '<tr><td><code>t3.small</code></td><td>20%</td><td>12</td><td>288</td></tr>', '<tr><td><code>t3.small</code></td><td>20%</td><td>24</td><td>576</td></tr>')
+          replace('chapters/ch02/index.html', '<th>서울 요금</th>', '<th>가격</th>')
+          for price in ['$0.08/GB·월', '$0.10/GB·월', '$0.138/GB·월', '$0.051/GB·월']:
+              replace('chapters/ch02/index.html', f'<td>{price}</td>', '<td>현재 AWS 가격표 확인</td>')
+          replace('chapters/ch02/index.html',
+                  '루트 볼륨은 "종료 시 삭제" 옵션이 기본으로 켜져 있지만, 나중에 추가한 볼륨은 기본으로 남습니다. EC2 → 볼륨 탭에서 <code>available</code> 상태 볼륨을 꼭 확인하세요. $0.08/GB·월로 조용히 과금됩니다.',
+                  '루트 볼륨은 일반적으로 “종료 시 삭제”가 기본이지만 추가 EBS 볼륨은 설정에 따라 남을 수 있습니다. EC2 → 볼륨에서 <code>available</code> 상태와 스냅샷을 확인하고, 비용은 현재 EBS 가격표를 기준으로 확인하세요.')
+          replace('chapters/ch02/index.html',
+                  '<tr><td><strong>Amazon Linux 2</strong></td><td>구버전 · 2025년 6월 지원 종료</td><td>레거시 호환 필요 시만</td></tr>',
+                  '<tr><td><strong>Amazon Linux 2</strong></td><td>2026년 6월 30일 지원 종료(EOL)</td><td>신규 구축에는 사용하지 말고 AL2023으로 마이그레이션</td></tr>')
+          replace('chapters/ch02/index.html',
+                  '<strong>.pem 파일은 생성 시 딱 한 번만 다운로드됩니다</strong><br>\n            AWS는 개인키를 저장하지 않습니다. 분실하면 해당 인스턴스에 SSH 접속 불가 — 인스턴스를 새로 만들어야 합니다. <code>~/.ssh/</code> 폴더에 보관하고 팀 공유 드라이브에는 절대 올리지 마세요.',
+                  '<strong>프라이빗 키는 다시 다운로드할 수 없습니다.</strong><br>\n            AWS는 생성한 프라이빗 키 사본을 보관하지 않습니다. 다만 키를 잃었다고 항상 인스턴스를 새로 만들어야 하는 것은 아닙니다. Session Manager, EC2 Instance Connect, 새 공개키 추가 등 사전에 구성된 접속 경로가 있으면 복구할 수 있습니다. 키는 안전한 개인 보관소에 저장하고 공유 드라이브·소스 저장소에는 올리지 마세요.')
+          replace('chapters/ch02/index.html', '<td>실행 중 무료</td>', '<td>Public IPv4 시간당 과금</td>')
+          replace('chapters/ch02/index.html', '<td>연결 시 $0.005/h ⚠️</td>', '<td>Public IPv4 시간당 과금</td>')
+          replace('chapters/ch02/index.html',
+                  '<strong>탄력적 IP — 2024년부터 연결 중에도 과금</strong><br>\n            2024년 2월부터 연결된 탄력적 IP도 시간당 $0.005 과금됩니다(월 약 $3.6). 미연결 상태면 더 비쌉니다. 실습 후 반드시 릴리스하세요.',
+                  '<strong>Public IPv4는 사용 여부와 관계없이 비용을 확인합니다.</strong><br>\n            AWS는 퍼블릭 IPv4 주소에 시간당 요금을 부과합니다. 자동 할당 Public IPv4와 Elastic IP 모두 현재 VPC 가격 정책을 확인하고, 필요 없는 주소는 해제·릴리스하세요.')
+          replace('chapters/ch02/index.html', '<td><code>pending</code></td><td>시작 중 (부팅)</td><td>없음</td>', '<td><code>pending</code></td><td>시작 중 (부팅)</td><td>인스턴스 과금 정책은 현재 EC2 요금 기준 확인</td>')
+          replace('chapters/ch02/index.html', '<td><code>terminated</code></td><td>종료됨 (완전 삭제)</td><td>없음 (EBS도 기본 삭제)</td>', '<td><code>terminated</code></td><td>종료됨 (재시작 불가)</td><td>인스턴스 컴퓨팅은 종료되지만 남은 EBS·스냅샷·Public IPv4 등 별도 리소스 확인</td>')
+          replace('chapters/ch02/index.html', '<td><strong>예약 인스턴스</strong></td><td>1년 또는 3년</td><td>최대 72%</td>', '<td><strong>예약 인스턴스</strong></td><td>1년 또는 3년</td><td>조건별 할인 — 현재 가격 확인</td>')
+          replace('chapters/ch02/index.html', '<td><strong>Savings Plans</strong></td><td>1년 또는 3년</td><td>최대 66%</td>', '<td><strong>Savings Plans</strong></td><td>1년 또는 3년</td><td>조건별 할인 — 현재 가격 확인</td>')
+          replace('chapters/ch02/index.html', '<td><strong>스팟 인스턴스</strong></td><td>없음</td><td>최대 90%</td>', '<td><strong>스팟 인스턴스</strong></td><td>없음</td><td>변동 할인 — 현재 가격 확인</td>')
+          replace('chapters/ch02/index.html',
+                  '<strong>생성 완료 순간부터 과금 시작</strong><br>\n            t3.micro 서울 리전 기준 시간당 $0.013. 실습 후 반드시 종료(Terminate)하세요. 시작 전 콘솔 우측 상단 리전이 <strong>아시아 태평양(서울)</strong>인지 확인하세요.',
+                  '<strong>생성한 리소스는 즉시 비용 대상이 될 수 있습니다.</strong><br>\n            인스턴스·EBS·Public IPv4 등 선택한 리소스의 현재 가격과 계정 혜택을 확인하세요. 실습 후 종료(Terminate)와 잔존 리소스 정리를 하고, 시작 전 콘솔 우측 상단 리전이 <strong>아시아 태평양(서울)</strong>인지 확인하세요.')
+          replace('chapters/ch02/index.html', '유형: <code>t3.micro</code> (학습) 또는 <code>t3.medium</code> (Spring Boot 권장)', '유형: <code>t3.micro</code> 등 학습 목적에 맞는 유형 선택 — Spring Boot는 메모리·부하를 보고 결정')
+          replace('chapters/ch02/index.html', 'Environment="DB_PASS=yourpassword"', '# DB 비밀번호는 Secrets Manager/Parameter Store 등에서 런타임에 주입')
+          replace('chapters/ch02/index.html',
+                  '<strong>-Xmx 메모리 설정</strong><br>\n            t3.micro(1GB): <code>-Xmx384m</code><br>\n            t3.medium(4GB): <code>-Xmx1g</code> ~ <code>-Xmx2g</code><br>\n            설정 안 하면 JVM이 메모리의 25~50%를 가져가는데, t3.micro에서는 OOM이 날 수 있습니다.',
+                  '<strong>-Xmx는 인스턴스 크기만 보고 복사하지 않습니다.</strong><br>\n            JVM 버전·컨테이너/호스트 메모리·네이티브 메모리·에이전트·동시 요청량을 함께 보고 정합니다. CloudWatch Agent와 JVM 지표를 관찰하며 실제 부하에서 조정하세요.')
+          replace('chapters/ch02/index.html', '<span>변경됨</span>', '<span>Stop → Start 시 일반적으로 변경됨</span>', required=False)
+          replace('chapters/ch02/index.html', 'Spring Boot 최소 t3.medium(4GB) 권장', 'Spring Boot 사양은 JVM·부하·모니터링 지표로 결정')
+          replace('chapters/ch02/index.html', 'gp3 권장($0.08/GB)', 'gp3 등 워크로드에 맞는 볼륨 유형 선택 — 현재 가격 확인')
+          replace('chapters/ch02/index.html', '고정 퍼블릭 IP. 연결 중에도 $0.005/h. 실습 후 릴리스 필수', '고정 Public IPv4. 현재 Public IPv4 가격 정책을 확인하고 실습 후 불필요하면 릴리스')
+
+          # Remove runtime content-correction shim from nav.js; keep functional quality/progress code.
+          p = Path('assets/nav.js')
+          text = p.read_text(encoding='utf-8')
+          start = text.find('  function applyContentCorrections() {')
+          end_marker = '  function enhanceChapterQuality() {'
+          end = text.find(end_marker)
+          if start == -1 or end == -1 or end <= start:
+              raise SystemExit('Could not locate applyContentCorrections block')
+          text = text[:start] + text[end:]
+          text = text.replace('    applyContentCorrections();\n', '')
+          p.write_text(text, encoding='utf-8')
+
+      - name: Verify normalization
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -q 'function applyContentCorrections' assets/nav.js
+          ! grep -q 'applyContentCorrections();' assets/nav.js
+          ! grep -q 'data-chapter="ch00"' chapters/ch00/index.html
+          ! grep -q 'AWS의 대부분 서비스는 IaaS입니다' chapters/ch01/index.html
+          ! grep -q '서울 시간당' chapters/ch02/index.html
+          ! grep -q 't3.micro</code></td><td>10%</td><td>6</td>' chapters/ch02/index.html
+          ! grep -q '2025년 6월 지원 종료' chapters/ch02/index.html
+          ! grep -q 'DB_PASS=yourpassword' chapters/ch02/index.html
+          grep -q 'data-chapter-id="ch00"' chapters/ch00/index.html
+          grep -q 't3.micro</code></td><td>10%</td><td>12</td><td>288' chapters/ch02/index.html
+
+      - name: Commit normalized source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add chapters/ch00/index.html chapters/ch01/index.html chapters/ch02/index.html assets/nav.js
+          if git diff --cached --quiet; then
+            echo 'No changes to commit'
+            exit 0
+          fi
+          git commit -m 'refactor: normalize CH00-CH02 source content'
+          git push
