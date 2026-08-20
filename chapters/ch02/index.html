@@ -194,7 +194,7 @@
           <span class="callout-icon">⚠️</span>
           <div class="callout-body">
             <strong>t3은 unlimited 모드가 기본</strong><br>
-            크레딧이 고갈돼도 성능이 떨어지지 않지만 <strong>초과 크레딧 사용에 추가 요금($0.05/vCPU·시간)</strong>이 붙습니다. CloudWatch에서 <code>CPUCreditBalance</code>를 모니터링하세요. t2는 standard 모드 기본이라 크레딧 고갈 시 기준 성능으로 제한됩니다.
+            크레딧이 고갈돼도 Unlimited 모드에서는 추가 CPU를 사용할 수 있지만 <strong>잉여 CPU Credit에 추가 요금이 발생할 수 있습니다.</strong> 정확한 금액은 현재 EC2 On-Demand의 T2/T3/T4g Unlimited Mode 가격을 확인하세요. CloudWatch의 <code>CPUCreditBalance</code>와 <code>CPUSurplusCreditsCharged</code>를 함께 모니터링하면 좋습니다. t2는 설정 방식이 다를 수 있으므로 생성·운영 시 Credit specification을 확인합니다.
           </div>
         </div>
 
@@ -283,7 +283,7 @@
               </tr>
               <tr>
                 <td><strong>다중 적용</strong></td>
-                <td>인스턴스 하나에 최대 5개 적용 가능</td>
+                <td>기본 quota는 네트워크 인터페이스당 5개이며, Service Quotas에서 조정 시 최대 16개까지 요청 가능</td>
                 <td>공통 규칙은 공유 보안 그룹으로, 서비스별 규칙은 별도로 관리</td>
               </tr>
             </tbody>

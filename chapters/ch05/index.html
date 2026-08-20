@@ -76,7 +76,7 @@
           <table class="content-table">
             <thead><tr><th>용어</th><th>의미</th><th>예시</th></tr></thead>
             <tbody>
-              <tr><td><strong>Bucket</strong></td><td>객체를 담는 최상위 컨테이너. 일반 목적 버킷 이름은 전역에서 고유해야 함</td><td><code>company-prod-assets</code></td></tr>
+              <tr><td><strong>Bucket</strong></td><td>객체를 담는 최상위 컨테이너. 일반 목적 버킷은 기본적으로 shared global namespace를 사용하며 이 경우 partition 내에서 이름이 고유해야 합니다. 필요하면 계정·리전 전용 account regional namespace도 선택할 수 있습니다.</td><td><code>company-prod-assets</code></td></tr>
               <tr><td><strong>Object</strong></td><td>실제 데이터 + 메타데이터로 구성된 저장 단위</td><td>이미지, PDF, 로그 파일</td></tr>
               <tr><td><strong>Key</strong></td><td>버킷 안에서 객체를 식별하는 전체 이름</td><td><code>uploads/2026/photo.jpg</code></td></tr>
               <tr><td><strong>Prefix</strong></td><td>Key 앞부분을 묶어 폴더처럼 보이게 하는 논리적 구분</td><td><code>uploads/2026/</code></td></tr>
