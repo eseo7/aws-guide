@@ -31,6 +31,15 @@
     return normalizeCompleted(list);
   }
 
+  function getChapterButton() {
+    return document.querySelector('.complete-btn[data-chapter-id], .complete-btn[data-chapter]');
+  }
+
+  function getButtonChapterId(btn) {
+    if (!btn) return '';
+    return btn.dataset.chapterId || btn.dataset.chapter || '';
+  }
+
   /* ── Keep home pricing labels timeless ─────────────── */
   function normalizeHomePricingLabels() {
     var labels = {
@@ -96,9 +105,9 @@
 
   /* ── Chapter quality hardening ─────────────────────── */
   function enhanceChapterQuality() {
-    var btn = document.querySelector('.complete-btn[data-chapter-id]');
+    var btn = getChapterButton();
     if (!btn) return;
-    var chId = btn.dataset.chapterId;
+    var chId = getButtonChapterId(btn);
 
     /* CH08: keep summary aligned with all taught sections */
     if (chId === 'ch08') {
@@ -201,9 +210,10 @@
 
   /* ── Chapter complete button ────────────────────────── */
   function initCompleteBtn() {
-    var btn = document.querySelector('.complete-btn[data-chapter-id]');
+    var btn = getChapterButton();
     if (!btn) return;
-    var chId = btn.dataset.chapterId;
+    var chId = getButtonChapterId(btn);
+    if (!chId) return;
     var icon = btn.querySelector('.complete-icon');
     var text = btn.querySelector('.complete-text');
 
@@ -212,6 +222,7 @@
       btn.classList.toggle('is-completed', isDone);
       if (icon) icon.textContent = isDone ? '✓' : '○';
       if (text) text.textContent = isDone ? '완료됨' : '완료로 표시';
+      if (!icon && !text) btn.textContent = isDone ? '✓ 완료됨' : '완료로 표시';
     }
 
     syncBtn(getCompleted());
