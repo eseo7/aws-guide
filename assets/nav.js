@@ -103,6 +103,100 @@
     });
   }
 
+  /* ── Accuracy corrections found during curriculum QA ── */
+  function applyContentCorrections() {
+    var btn = getChapterButton();
+    if (!btn) return;
+    var chId = getButtonChapterId(btn);
+
+    if (chId === 'ch00') {
+      var heroServices = document.querySelector('.chapter-hero-services');
+      if (heroServices) heroServices.textContent = heroServices.textContent.replace('암호화/SSL', '암호화/TLS');
+
+      document.querySelectorAll('#osi table tr').forEach(function (row) {
+        var cells = row.querySelectorAll('td');
+        if (cells.length === 3 && cells[0].textContent.trim() === '속도') {
+          cells[1].textContent = '연결·재전송 등 제어 오버헤드가 상대적으로 큼';
+          cells[2].textContent = '제어 오버헤드가 작아 지연에 유리할 수 있음';
+        }
+      });
+    }
+
+    if (chId === 'ch01') {
+      document.querySelectorAll('#cloud p').forEach(function (p) {
+        var text = p.textContent.trim();
+        if (text.indexOf('AWS의 대부분 서비스는 IaaS입니다.') === 0) {
+          p.innerHTML = 'AWS에는 <strong>IaaS·PaaS에 가까운 서비스와 완전관리형 서비스가 함께</strong> 있습니다. EC2는 사용자가 OS와 애플리케이션을 관리하는 IaaS의 대표 예이고, Lambda는 서버 운영 부담을 크게 줄인 서버리스 컴퓨팅 서비스입니다. 서비스마다 사용자가 책임지는 범위가 다르므로 IaaS/PaaS/SaaS 분류는 이해를 돕는 기준으로 사용합니다.';
+        }
+      });
+
+      document.querySelectorAll('#cloud .callout-body').forEach(function (box) {
+        if (box.textContent.indexOf('VMC(VMware Cloud) 환경에서 EC2로 마이그레이션') !== -1) {
+          box.innerHTML = '<strong>VMC → EC2 전환을 예로 보면</strong><br>VMC(VMware Cloud)도 이미 클라우드 환경입니다. VMC에서 EC2로 옮기는 작업은 “온프레미스 → 클라우드”가 아니라 <strong>VMware 기반 클라우드 → AWS 네이티브 IaaS로 가상 서버 플랫폼을 전환</strong>하는 사례로 이해하는 것이 정확합니다.';
+        }
+      });
+
+      document.querySelectorAll('#virtualization p').forEach(function (p) {
+        if (p.textContent.indexOf('AWS는 자체 개발한 Nitro System을 하이퍼바이저로 사용합니다.') === 0) {
+          p.innerHTML = '현대 EC2 인스턴스의 많은 유형은 <strong>AWS Nitro System</strong> 위에서 동작합니다. Nitro System은 전용 하드웨어와 경량 <strong>Nitro Hypervisor</strong> 등을 조합해 가상화 기능을 분담하고, 인스턴스 간 격리와 성능을 제공합니다.';
+        }
+      });
+
+      document.querySelectorAll('#cloud table tbody tr').forEach(function (row) {
+        var cells = row.querySelectorAll('td');
+        if (cells.length >= 3 && cells[0].textContent.trim() === '초기 비용') {
+          cells[2].textContent = '서버 구매 선투자는 줄일 수 있으나 사용한 AWS 리소스 비용은 발생';
+        }
+      });
+    }
+
+    if (chId === 'ch02') {
+      document.querySelectorAll('#what p').forEach(function (p) {
+        if (p.textContent.indexOf('AWS 데이터센터의 물리 서버를 Nitro System(하이퍼바이저)') !== -1) {
+          p.innerHTML = '많은 현대 EC2 인스턴스는 <strong>AWS Nitro System</strong>의 전용 하드웨어와 경량 Nitro Hypervisor를 기반으로 가상화됩니다. 같은 물리 호스트를 공유할 수 있어도 AWS의 가상화·보안 경계로 고객 인스턴스는 서로 격리됩니다.';
+        }
+      });
+
+      document.querySelectorAll('#type table').forEach(function (table) {
+        var headers = table.querySelectorAll('th');
+        var priceIndex = -1;
+        headers.forEach(function (th, idx) {
+          if (th.textContent.indexOf('서울 시간당') !== -1) priceIndex = idx;
+        });
+        if (priceIndex === -1) return;
+        headers[priceIndex].textContent = '가격';
+        table.querySelectorAll('tbody tr').forEach(function (row) {
+          var cells = row.querySelectorAll('td');
+          if (cells[priceIndex]) cells[priceIndex].textContent = '현재 AWS 가격표 확인';
+          cells.forEach(function (cell) {
+            if (cell.textContent.indexOf('프리 티어') !== -1) cell.textContent = cell.textContent.replace('프리 티어', '계정 혜택 확인');
+          });
+        });
+      });
+
+      var creditFix = {
+        't3.micro': ['12', '288'],
+        't3.small': ['24', '576'],
+        't3.medium': ['24', '576'],
+        't3.large': ['36', '864']
+      };
+      document.querySelectorAll('#tburst table tbody tr').forEach(function (row) {
+        var cells = row.querySelectorAll('td');
+        if (cells.length < 4) return;
+        var type = cells[0].textContent.trim();
+        if (!creditFix[type]) return;
+        cells[2].textContent = creditFix[type][0];
+        cells[3].textContent = creditFix[type][1];
+      });
+
+      document.querySelectorAll('#type .callout-body').forEach(function (box) {
+        if (box.textContent.indexOf('t3.micro로 Spring Boot 실행하면?') !== -1) {
+          box.innerHTML = '<strong>Spring Boot 인스턴스 크기는 고정 정답이 없습니다.</strong><br>1GB 메모리의 t3.micro는 JVM·OS·에이전트 구성을 함께 올리면 여유가 작을 수 있습니다. 하지만 “운영은 최소 t3.medium”처럼 고정하기보다 <strong>JVM 힙, 동시 요청, 커넥션 풀, 모니터링 지표와 부하 테스트</strong>를 기준으로 크기를 결정하고 필요하면 Auto Scaling과 함께 조정합니다.';
+        }
+      });
+    }
+  }
+
   /* ── Chapter quality hardening ─────────────────────── */
   function enhanceChapterQuality() {
     var btn = getChapterButton();
@@ -271,6 +365,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     normalizeHomePricingLabels();
     normalizeHomeCardSummaries();
+    applyContentCorrections();
     enhanceChapterQuality();
     renderProgress(getCompleted());
     initCompleteBtn();
