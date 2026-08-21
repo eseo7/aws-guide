@@ -63,6 +63,8 @@
         <p>EC2(Elastic Compute Cloud)는 AWS에서 <strong>가상 서버를 빌려주는 서비스</strong>입니다. 콘솔 클릭 몇 번이면 수십 초 안에 서버가 생기고, 필요 없으면 즉시 삭제해서 사용한 시간만큼만 냅니다.</p>
         <p>이름의 <strong>Elastic</strong>은 탄력적이라는 뜻입니다. 트래픽이 몰리면 사양을 올리고, 새벽처럼 한산할 때는 낮춥니다. 온프레미스 서버는 최대 트래픽 기준으로 사야 했지만, EC2는 지금 필요한 만큼만 씁니다.</p>
 
+        <div class="callout callout-tip beginner-priority"><span class="callout-icon">🧭</span><div class="callout-body"><strong>처음 학습할 때는 전부 외우지 않아도 됩니다.</strong><br><strong>지금 꼭 이해할 것:</strong> EC2가 가상 서버라는 점, 인스턴스 유형, 보안 그룹, EBS, 키 페어, Stop과 Terminate 차이, 실습 후 비용 정리.<br><strong>첫 실습 후 다시 볼 심화:</strong> CPU Credit, ENI, User Data, Instance Metadata, Session Manager, 세부 요금 모델. 먼저 서버를 한 번 만들어 본 뒤 돌아오면 훨씬 쉽게 이해됩니다.</div></div>
+
         <h3>EC2가 만들어지는 원리</h3>
         <p>많은 현대 EC2 인스턴스는 <strong>AWS Nitro System</strong>의 전용 하드웨어와 경량 Nitro Hypervisor를 기반으로 가상화됩니다. 같은 물리 호스트를 공유할 수 있어도 AWS의 가상화·보안 경계로 고객 인스턴스는 서로 격리됩니다.</p>
 
